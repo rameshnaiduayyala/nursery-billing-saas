@@ -27,7 +27,7 @@ export function LoginPage() {
           localStorage.setItem("nursery_current_org", defaultWs.organization._id || defaultWs.organization.id);
           localStorage.setItem("nursery_current_branch", defaultWs.branchAccess?.[0]?.branchId || "");
         }
-        navigate("/");
+        navigate("/dashboard");
       }
     } catch (err) {
       setError(err.message || "Failed to sign in. Please verify your email and password.");
@@ -166,7 +166,7 @@ export function RegisterPage() {
             </p>
           </div>
           <button
-            onClick={() => navigate("/login")}
+            onClick={() => navigate("/")}
             className="w-full rounded-xl bg-[#1b6840] py-3 text-sm font-bold text-white shadow-md hover:bg-[#155433]"
           >
             Continue to Sign in
@@ -314,7 +314,7 @@ export function RegisterPage() {
 
           <p className="mt-5 text-center text-sm text-slate-500">
             Already registered?{" "}
-            <Link className="font-semibold text-emerald-700 hover:underline" to="/login">
+            <Link className="font-semibold text-emerald-700 hover:underline" to="/">
               Sign in to workspace
             </Link>
           </p>

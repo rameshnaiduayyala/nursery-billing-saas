@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AppLayout from "./components/layout/AppLayout";
 import DashboardPage from "./pages/DashboardPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
@@ -14,25 +14,40 @@ import SettingsPage from "./pages/SettingsPage";
 import AdminOrganizationsPage from "./pages/AdminOrganizationsPage";
 import { LoginPage, RegisterPage } from "./pages/AuthPages";
 
+/**
+ * Route guard that redirects unauthenticated users to /
+ */
+function ProtectedLayout() {
+  const user = localStorage.getItem("nursery_user");
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+  return <AppLayout />;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
+        {/* Root URL renders Login page directly */}
+        <Route path="/" element={<LoginPage />} />
+        <Route path="/login" element={<Navigate to="/" replace />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route element={<AppLayout />}>
-          <Route index element={<DashboardPage />} />
-          <Route path="branches" element={<BranchesPage />} />
-          <Route path="customers" element={<CustomersPage />} />
-          <Route path="products" element={<ProductsPage />} />
-          <Route path="quotations" element={<QuotationsPage />} />
-          <Route path="invoices" element={<InvoicesPage />} />
-          <Route path="payments" element={<PaymentsPage />} />
-          <Route path="expenses" element={<ExpensesPage />} />
-          <Route path="settings" element={<SettingsPage />} />
-          <Route path="admin/organizations" element={<AdminOrganizationsPage />} />
+
+        {/* Protected SaaS Workspace routes */}
+        <Route element={<ProtectedLayout />}>
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/branches" element={<BranchesPage />} />
+          <Route path="/customers" element={<CustomersPage />} />
+          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/quotations" element={<QuotationsPage />} />
+          <Route path="/invoices" element={<InvoicesPage />} />
+          <Route path="/payments" element={<PaymentsPage />} />
+          <Route path="/expenses" element={<ExpensesPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/admin/organizations" element={<AdminOrganizationsPage />} />
           <Route
-            path="reports"
+            path="/reports"
             element={
               <PlaceholderPage
                 title="Reports & Financial Statements"
@@ -41,7 +56,7 @@ export default function App() {
             }
           />
           <Route
-            path="portal"
+            path="/portal"
             element={
               <PlaceholderPage
                 title="Customer Portal"
@@ -50,6 +65,9 @@ export default function App() {
             }
           />
         </Route>
+
+        {/* Fallback unknown paths to root */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

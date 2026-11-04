@@ -1,13 +1,13 @@
 import React from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   Sprout, LayoutDashboard, Building2, Users, Package, FileText,
   ReceiptText, Wallet, Receipt, ChartNoAxesCombined, Settings,
-  ShieldCheck, ChevronDown, Search, Bell, Menu, Leaf
+  ShieldCheck, ChevronDown, Search, Bell, Menu, Leaf, LogOut
 } from "lucide-react";
 
 const navigation = [
-  { label: "Overview", items: [{ to: "/", label: "Dashboard", icon: LayoutDashboard }] },
+  { label: "Overview", items: [{ to: "/dashboard", label: "Dashboard", icon: LayoutDashboard }] },
   {
     label: "Nursery Business",
     items: [
@@ -35,6 +35,32 @@ const navigation = [
 ];
 
 export default function AppLayout() {
+  const navigate = useNavigate();
+  const user = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("nursery_user") || "{}");
+    } catch {
+      return {};
+    }
+  })();
+
+  const handleLogout = () => {
+    localStorage.removeItem("nursery_user");
+    localStorage.removeItem("nursery_current_org");
+    localStorage.removeItem("nursery_current_branch");
+    localStorage.removeItem("nursery_token");
+    navigate("/login");
+  };
+
+  const initials = user?.name
+    ? user.name
+        .split(" ")
+        .map((n) => n[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase()
+    : "NO";
+
   return (
     <div className="min-h-screen bg-[#f6f8f6] md:flex">
       <aside className="hidden w-64 shrink-0 border-r border-slate-200 bg-white md:flex md:flex-col">
@@ -72,7 +98,6 @@ export default function AppLayout() {
                     <NavLink
                       key={item.to}
                       to={item.to}
-                      end={item.to === "/"}
                       className={({ isActive }) =>
                         `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
                           isActive
@@ -91,14 +116,23 @@ export default function AppLayout() {
           ))}
         </nav>
         <div className="border-t border-slate-100 p-4">
-          <div className="flex items-center gap-3 rounded-xl bg-slate-50 p-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#dceee2] text-sm font-bold text-[#1f6b43]">
-              RP
+          <div className="flex items-center justify-between rounded-xl bg-slate-50 p-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#dceee2] text-sm font-bold text-[#1f6b43]">
+                {initials}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-semibold">{user?.name || "Nursery Owner"}</div>
+                <div className="truncate text-xs text-slate-500">{user?.email || "owner"}</div>
+              </div>
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-semibold">Ramesh Patel</div>
-              <div className="text-xs text-slate-500">Nursery Owner</div>
-            </div>
+            <button
+              onClick={handleLogout}
+              title="Sign out"
+              className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg transition"
+            >
+              <LogOut size={16} />
+            </button>
           </div>
         </div>
       </aside>
@@ -122,9 +156,12 @@ export default function AppLayout() {
               <Bell size={19} />
               <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-emerald-600" />
             </button>
-            <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center font-bold text-xs text-emerald-800">
-              GV
-            </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 border border-slate-200 rounded-lg px-2.5 py-1.5 hover:bg-slate-50 transition"
+            >
+              <LogOut size={14} /> Logout
+            </button>
           </div>
         </header>
         <div className="p-4 md:p-8">
