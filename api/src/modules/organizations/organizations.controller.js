@@ -9,14 +9,19 @@ const updateOrgSchema = z.object({
   timezone: z.string().default("Asia/Kolkata").optional(),
   logoUrl: z.string().optional().nullable(),
   address: z
-    .object({
-      line1: z.string().optional(),
-      line2: z.string().optional(),
-      city: z.string().optional(),
-      state: z.string().optional(),
-      postalCode: z.string().optional(),
-      country: z.string().optional(),
-    })
+    .union([
+      z.string(),
+      z.object({
+        street: z.string().optional().nullable(),
+        line1: z.string().optional().nullable(),
+        line2: z.string().optional().nullable(),
+        city: z.string().optional().nullable(),
+        state: z.string().optional().nullable(),
+        pincode: z.string().optional().nullable(),
+        postalCode: z.string().optional().nullable(),
+        country: z.string().optional().nullable(),
+      }),
+    ])
     .optional()
     .nullable(),
 });

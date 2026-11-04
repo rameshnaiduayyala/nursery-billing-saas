@@ -90,6 +90,7 @@ export function LoginPage() {
           if (res.data.workspaces && res.data.workspaces.length > 0) {
             const defaultWs = res.data.workspaces[0];
             localStorage.setItem("nursery_current_org", defaultWs.organization._id || defaultWs.organization.id);
+            localStorage.setItem("nursery_current_org_data", JSON.stringify(defaultWs.organization));
             localStorage.setItem("nursery_current_branch", defaultWs.branchAccess?.[0]?.branchId || "");
           }
           navigate("/dashboard");

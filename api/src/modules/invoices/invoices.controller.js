@@ -95,6 +95,7 @@ export async function listInvoices(request, reply) {
   const invoices = await Invoice.find(filter)
     .populate("customerId", "name businessName phone customerCode")
     .populate("branchId", "name code")
+    .populate("organizationId", "name phone email address logoUrl currency")
     .sort({ createdAt: -1 });
 
   return reply.send({ success: true, data: invoices });

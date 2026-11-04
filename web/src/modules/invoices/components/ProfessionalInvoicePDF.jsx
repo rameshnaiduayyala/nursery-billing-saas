@@ -227,8 +227,56 @@ const styles = StyleSheet.create({
   },
 });
 
-export default function ProfessionalInvoicePDF({ invoice, nurseryInfo = {} }) {
+export default function ProfessionalInvoicePDF({ invoice, nurseryInfo: passedNurseryInfo }) {
   if (!invoice) return null;
+
+  // Retrieve nursery details with fallback priority:
+  // 1. invoice.organizationId (populated from DB)
+  // 2. passed nurseryInfo prop
+  // 3. localStorage cached nursery_current_org_data
+  const storedOrg = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("nursery_current_org_data") || "{}");
+    } catch {
+      return {};
+    }
+  })();
+
+  const nursery = {
+    name:
+      invoice.organizationId?.name ||
+      passedNurseryInfo?.name ||
+      storedOrg?.name ||
+      "NURSERYDESK",
+    phone:
+      invoice.organizationId?.phone ||
+      passedNurseryInfo?.phone ||
+      storedOrg?.phone ||
+      "",
+    email:
+      invoice.organizationId?.email ||
+      passedNurseryInfo?.email ||
+      storedOrg?.email ||
+      "",
+    address:
+      invoice.organizationId?.address ||
+      passedNurseryInfo?.address ||
+      storedOrg?.address ||
+      null,
+  };
+
+  const formatAddress = (addr) => {
+    if (!addr) return "";
+    if (typeof addr === "string") return addr;
+    if (typeof addr === "object") {
+      return [addr.street, addr.city, addr.state, addr.pincode]
+        .filter(Boolean)
+        .join(", ");
+    }
+    return String(addr);
+  };
+
+  const nurseryAddressFormatted = formatAddress(nursery.address);
 
   const isQuotation = invoice.documentType === "QUOTATION";
   const docTitle = isQuotation ? "ESTIMATE / QUOTATION" : "NON-GST INVOICE";
@@ -238,26 +286,8 @@ export default function ProfessionalInvoicePDF({ invoice, nurseryInfo = {} }) {
       <Page size="A4" style={styles.page}>
         {/* Header Section */}
         <View style={styles.headerContainer}>
-          <View>
-            <Text style={styles.brandTitle}>
-              {nurseryInfo.name || "NURSERYDESK"}
-            </Text>
-            {nurseryInfo.phone && (
-              <Text style={styles.brandSubtitle}>Ph: {nurseryInfo.phone}</Text>
-            )}
-            {nurseryInfo.address && (
-              <Text style={styles.brandSubtitle}>
-                {typeof nurseryInfo.address === "object"
-                  ? [
-                      nurseryInfo.address.street,
-                      nurseryInfo.address.city,
-                      nurseryInfo.address.state,
-                    ]
-                      .filter(Boolean)
-                      .join(", ")
-                  : String(nurseryInfo.address)}
-              </Text>
-            )}
+          <View style={{ maxWidth: "60%" }}>
+            <Text style={styles.brandTitle}>{nursery.name}</Text>
           </View>
 
           <View>
@@ -277,7 +307,7 @@ export default function ProfessionalInvoicePDF({ invoice, nurseryInfo = {} }) {
           </View>
         </View>
 
-        {/* Billed To / Issued By Party Details */}
+        {/* Billed To / Issued By (Nursery Business Details) */}
         <View style={styles.partyGrid}>
           <View style={styles.partyCol}>
             <Text style={styles.partyLabel}>Customer Details (Billed To)</Text>
@@ -294,48 +324,23 @@ export default function ProfessionalInvoicePDF({ invoice, nurseryInfo = {} }) {
             </Text>
             {invoice.customerSnapshot?.address && (
               <Text style={styles.partyDetail}>
-                {typeof invoice.customerSnapshot.address === "object"
-                  ? [
-                      invoice.customerSnapshot.address.street,
-                      invoice.customerSnapshot.address.city,
-                      invoice.customerSnapshot.address.state,
-                      invoice.customerSnapshot.address.pincode,
-                    ]
-                      .filter(Boolean)
-                      .join(", ")
-                  : String(invoice.customerSnapshot.address)}
+                {formatAddress(invoice.customerSnapshot.address)}
               </Text>
             )}
           </View>
 
           <View style={styles.partyCol}>
-            <Text style={styles.partyLabel}>Issued Branch / Dispatch</Text>
-            <Text style={styles.partyName}>
-              {invoice.branchId?.name || "Main Nursery Branch"}
-            </Text>
-            {invoice.branchId?.code && (
-              <Text style={styles.partyDetail}>Branch Code: {invoice.branchId.code}</Text>
-            )}
-            {invoice.branchId?.location && (
-              <Text style={styles.partyDetail}>
-                {typeof invoice.branchId.location === "object"
-                  ? JSON.stringify(invoice.branchId.location)
-                  : String(invoice.branchId.location)}
-              </Text>
-            )}
-            {invoice.branchId?.address && (
-              <Text style={styles.partyDetail}>
-                {typeof invoice.branchId.address === "object"
-                  ? [
-                      invoice.branchId.address.street,
-                      invoice.branchId.address.city,
-                      invoice.branchId.address.state,
-                    ]
-                      .filter(Boolean)
-                      .join(", ")
-                  : String(invoice.branchId.address)}
-              </Text>
-            )}
+            <Text style={styles.partyLabel}>Issued By (Nursery Business)</Text>
+            <Text style={styles.partyName}>{nursery.name}</Text>
+            {nursery.phone ? (
+              <Text style={styles.partyDetail}>Contact: {nursery.phone}</Text>
+            ) : null}
+            {nursery.email ? (
+              <Text style={styles.partyDetail}>Email: {nursery.email}</Text>
+            ) : null}
+            {nurseryAddressFormatted ? (
+              <Text style={styles.partyDetail}>{nurseryAddressFormatted}</Text>
+            ) : null}
           </View>
         </View>
 

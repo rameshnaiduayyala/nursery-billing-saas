@@ -1,224 +1,245 @@
 import React, { useEffect, useState } from "react";
-import { Sliders, Truck, Users, Key, Save, Check, Loader2 } from "lucide-react";
+import { Building2, Save, Check, Loader2, AlertCircle } from "lucide-react";
 import { apiRequest } from "../../lib/api";
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState("profile"); // 'profile' | 'charges'
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const [profile, setProfile] = useState({
     businessName: "",
-    contactPerson: "",
-    email: "",
     phone: "",
+    email: "",
     address: "",
     city: "",
     state: "",
     pincode: "",
-    bankName: "",
-    accountNumber: "",
-    ifscCode: "",
-    upiId: "",
   });
-
-  const [charges, setCharges] = useState([]);
 
   useEffect(() => {
     const loadSettings = async () => {
       try {
         setLoading(true);
-        // Load user info from localStorage session
-        const storedUser = JSON.parse(localStorage.getItem("nursery_user") || "{}");
-        if (storedUser) {
-          setProfile((p) => ({
-            ...p,
-            contactPerson: storedUser.name || "",
-            email: storedUser.email || "",
-            phone: storedUser.phone || "",
-          }));
-        }
+        setError("");
 
-        // Load charges templates from API
-        const chRes = await apiRequest("/charges/templates").catch(() => ({ data: [] }));
-        if (chRes.data) setCharges(chRes.data);
+        // 1. Fetch organization profile directly from API
+        const res = await apiRequest("/organizations/profile").catch(() => null);
+        if (res && res.data) {
+          const org = res.data;
+          const addr = org.address || {};
+          setProfile({
+            businessName: org.name || "",
+            phone: org.phone || "",
+            email: org.email || "",
+            address: addr.street || addr.line1 || (typeof addr === "string" ? addr : ""),
+            city: addr.city || "",
+            state: addr.state || "",
+            pincode: addr.pincode || addr.postalCode || "",
+          });
+
+          // Cache in local storage for instant sync across PDF & header
+          localStorage.setItem("nursery_current_org_data", JSON.stringify(org));
+        } else {
+          // Fallback to local storage
+          const storedOrg = JSON.parse(localStorage.getItem("nursery_current_org_data") || "{}");
+          const addr = storedOrg.address || {};
+          setProfile({
+            businessName: storedOrg.name || "",
+            phone: storedOrg.phone || "",
+            email: storedOrg.email || "",
+            address: addr.street || addr.line1 || (typeof addr === "string" ? addr : ""),
+            city: addr.city || "",
+            state: addr.state || "",
+            pincode: addr.pincode || addr.postalCode || "",
+          });
+        }
       } catch (err) {
-        console.error(err);
+        console.error("Failed to load nursery settings:", err);
       } finally {
         setLoading(false);
       }
     };
+
     loadSettings();
   }, []);
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    setSaving(true);
+    setError("");
+
+    try {
+      const payload = {
+        name: profile.businessName,
+        phone: profile.phone || null,
+        email: profile.email || null,
+        address: {
+          street: profile.address || null,
+          city: profile.city || null,
+          state: profile.state || null,
+          pincode: profile.pincode || null,
+        },
+      };
+
+      const res = await apiRequest("/organizations/profile", {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+      });
+
+      if (res && res.data) {
+        localStorage.setItem("nursery_current_org_data", JSON.stringify(res.data));
+      }
+
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      setError(err.message || "Failed to save organization settings.");
+    } finally {
+      setSaving(false);
+    }
   };
 
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center p-16 text-[#64748B]">
+        <Loader2 size={36} className="animate-spin text-[#176B45] mb-2" />
+        <span className="text-sm font-semibold">Loading business settings...</span>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="max-w-4xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Nursery Business Settings</h1>
-        <p className="text-sm text-slate-500">
-          Configure business profile, banking/UPI instructions, document numbering sequences, and default freight charges.
+        <h1 className="text-2xl font-bold tracking-tight text-[#1F2937]">Nursery Business Settings</h1>
+        <p className="text-sm text-[#64748B]">
+          Update your official nursery business name, phone, email, and address. These details appear directly on all generated Invoices, Quotations, and client PDFs.
         </p>
       </div>
 
-      <div className="flex border-b border-slate-200">
-        <button
-          onClick={() => setActiveTab("profile")}
-          className={`border-b-2 px-4 py-2.5 text-sm font-semibold transition ${
-            activeTab === "profile"
-              ? "border-[#1b6840] text-[#1b6840]"
-              : "border-transparent text-slate-500 hover:text-slate-700"
-          }`}
-        >
-          Business Profile & Bank Details
-        </button>
-        <button
-          onClick={() => setActiveTab("charges")}
-          className={`border-b-2 px-4 py-2.5 text-sm font-semibold transition ${
-            activeTab === "charges"
-              ? "border-[#1b6840] text-[#1b6840]"
-              : "border-transparent text-slate-500 hover:text-slate-700"
-          }`}
-        >
-          Default Freight & Loading Matrix
-        </button>
-      </div>
+      {error && (
+        <div className="flex items-center gap-2 rounded-xl bg-red-50 p-4 text-sm text-red-700 border border-red-200">
+          <AlertCircle size={18} className="shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
 
-      {activeTab === "profile" ? (
-        <form onSubmit={handleSave} className="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 uppercase">Nursery Firm Name</label>
-              <input
-                type="text"
-                placeholder="e.g. Green Valley Farm"
-                value={profile.businessName}
-                onChange={(e) => setProfile({ ...profile, businessName: e.target.value })}
-                className="mt-1 w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-emerald-600 focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 uppercase">Owner / Contact Person</label>
-              <input
-                type="text"
-                placeholder="Owner full name"
-                value={profile.contactPerson}
-                onChange={(e) => setProfile({ ...profile, contactPerson: e.target.value })}
-                className="mt-1 w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-emerald-600 focus:outline-none"
-              />
-            </div>
+      <form onSubmit={handleSave} className="space-y-6 rounded-2xl border border-[#E2EAE3] bg-white p-7 shadow-xs">
+        <div className="border-b border-[#E2EAE3] pb-4">
+          <h2 className="text-base font-bold text-[#1F2937] flex items-center gap-2">
+            <Building2 size={18} className="text-[#176B45]" />
+            Nursery Organization Profile
+          </h2>
+          <p className="text-xs text-[#64748B] mt-0.5">
+            This name and address are used on all customer printouts and legal billing records.
+          </p>
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-[#64748B] uppercase mb-1">
+            Nursery Business / Farm Name
+          </label>
+          <input
+            required
+            type="text"
+            placeholder="e.g. Green Valley Farm & Agro Nursery"
+            value={profile.businessName}
+            onChange={(e) => setProfile({ ...profile, businessName: e.target.value })}
+            className="w-full rounded-xl border border-[#E2EAE3] p-3 text-sm text-[#1F2937] focus:border-[#176B45] focus:outline-none"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label className="block text-xs font-semibold text-[#64748B] uppercase mb-1">Business Phone Number</label>
+            <input
+              type="tel"
+              placeholder="+91 98765 43210"
+              value={profile.phone}
+              onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+              className="w-full rounded-xl border border-[#E2EAE3] p-3 text-sm text-[#1F2937] focus:border-[#176B45] focus:outline-none"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-[#64748B] uppercase mb-1">Business Email Address</label>
+            <input
+              type="email"
+              placeholder="contact@nurseryfarm.com"
+              value={profile.email}
+              onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+              className="w-full rounded-xl border border-[#E2EAE3] p-3 text-sm text-[#1F2937] focus:border-[#176B45] focus:outline-none"
+            />
+          </div>
+        </div>
+
+        <div className="border-t border-[#E2EAE3] pt-4 space-y-4">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-[#64748B]">Official Nursery Address</h3>
+
+          <div>
+            <label className="block text-xs font-semibold text-[#64748B] uppercase mb-1">
+              Street / Farm Location / Landmark
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Survey No. 42, Main Road, Near Canal"
+              value={profile.address}
+              onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+              className="w-full rounded-xl border border-[#E2EAE3] p-3 text-sm text-[#1F2937] focus:border-[#176B45] focus:outline-none"
+            />
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-600 uppercase">Phone Number</label>
+              <label className="block text-xs font-semibold text-[#64748B] uppercase mb-1">City / Hub</label>
               <input
                 type="text"
-                placeholder="+91"
-                value={profile.phone}
-                onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                className="mt-1 w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-emerald-600 focus:outline-none"
+                placeholder="e.g. Kadiyam"
+                value={profile.city}
+                onChange={(e) => setProfile({ ...profile, city: e.target.value })}
+                className="w-full rounded-xl border border-[#E2EAE3] p-3 text-sm text-[#1F2937] focus:border-[#176B45] focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-600 uppercase">Email Address</label>
+              <label className="block text-xs font-semibold text-[#64748B] uppercase mb-1">State</label>
               <input
-                type="email"
-                placeholder="email@domain.com"
-                value={profile.email}
-                onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                className="mt-1 w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-emerald-600 focus:outline-none"
+                type="text"
+                placeholder="e.g. Andhra Pradesh"
+                value={profile.state}
+                onChange={(e) => setProfile({ ...profile, state: e.target.value })}
+                className="w-full rounded-xl border border-[#E2EAE3] p-3 text-sm text-[#1F2937] focus:border-[#176B45] focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-600 uppercase">UPI ID (For Receipt QR / Invoices)</label>
+              <label className="block text-xs font-semibold text-[#64748B] uppercase mb-1">Pincode</label>
               <input
                 type="text"
-                placeholder="e.g. nursery@upi"
-                value={profile.upiId}
-                onChange={(e) => setProfile({ ...profile, upiId: e.target.value })}
-                className="mt-1 w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-emerald-600 focus:outline-none"
+                placeholder="e.g. 533126"
+                value={profile.pincode}
+                onChange={(e) => setProfile({ ...profile, pincode: e.target.value })}
+                className="w-full rounded-xl border border-[#E2EAE3] p-3 text-sm text-[#1F2937] focus:border-[#176B45] focus:outline-none"
               />
             </div>
           </div>
-
-          <div className="border-t border-slate-100 pt-4">
-            <h3 className="text-sm font-bold text-slate-900 mb-3">Bank Account for Invoices & Receipts</h3>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 uppercase">Bank Name</label>
-                <input
-                  type="text"
-                  placeholder="e.g. State Bank of India"
-                  value={profile.bankName}
-                  onChange={(e) => setProfile({ ...profile, bankName: e.target.value })}
-                  className="mt-1 w-full rounded-xl border border-slate-200 p-2.5 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 uppercase">Account Number</label>
-                <input
-                  type="text"
-                  placeholder="Account number"
-                  value={profile.accountNumber}
-                  onChange={(e) => setProfile({ ...profile, accountNumber: e.target.value })}
-                  className="mt-1 w-full rounded-xl border border-slate-200 p-2.5 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 uppercase">IFSC Code</label>
-                <input
-                  type="text"
-                  placeholder="e.g. SBIN0001234"
-                  value={profile.ifscCode}
-                  onChange={(e) => setProfile({ ...profile, ifscCode: e.target.value })}
-                  className="mt-1 w-full rounded-xl border border-slate-200 p-2.5 text-sm"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-end pt-2">
-            <button
-              type="submit"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#1b6840] px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#155433]"
-            >
-              {saved ? <Check size={18} /> : <Save size={18} />}
-              {saved ? "Saved Successfully" : "Save Changes"}
-            </button>
-          </div>
-        </form>
-      ) : (
-        <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-base font-bold text-slate-900">Configured Reusable Charges</h3>
-          </div>
-          {charges.length === 0 ? (
-            <p className="text-sm text-slate-400 py-6 text-center">
-              No custom charge templates configured. Reusable charges can be set up in the charges module.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {charges.map((c) => (
-                <div key={c._id || c.id} className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/50 p-4">
-                  <div>
-                    <div className="font-semibold text-slate-900">{c.name}</div>
-                    <div className="text-xs text-slate-500">
-                      Calculation: {c.calculationType} • Category: {c.chargeType}
-                    </div>
-                  </div>
-                  <div className="text-right font-bold text-slate-900">₹{c.defaultRate}</div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
-      )}
+
+        <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E2EAE3]">
+          {saved && (
+            <span className="text-xs font-semibold text-[#176B45] flex items-center gap-1">
+              <Check size={16} /> Saved Successfully
+            </span>
+          )}
+          <button
+            type="submit"
+            disabled={saving}
+            className="inline-flex items-center gap-2 rounded-xl bg-[#123D2B] px-6 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-[#176B45] transition disabled:opacity-50 cursor-pointer"
+          >
+            {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+            <span>{saving ? "Saving Changes..." : "Save Nursery Settings"}</span>
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
