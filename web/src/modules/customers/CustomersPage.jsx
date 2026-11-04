@@ -1,277 +1,259 @@
-import React, { useEffect, useState } from "react";
-import { Plus, Search, User, Phone, MapPin, Building, CreditCard, ArrowUpRight, Loader2, AlertCircle } from "lucide-react";
-import { apiRequest } from "../../lib/api";
+import React, { useState } from "react";
+import { Plus, RotateCw, AlertCircle, Loader2, Search } from "lucide-react";
+import { useCustomers } from "./hooks/useCustomers";
+import { CustomerListGrid } from "./components/CustomerListGrid";
+import { CustomerFormModal } from "./components/CustomerFormModal";
+import { CustomerLedgerModal } from "./components/CustomerLedgerModal";
 
 export default function CustomersPage() {
-  const [customers, setCustomers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const {
+    customers,
+    loading,
+    error,
+    loadCustomers,
+    saveCustomer,
+    deleteCustomer,
+    getCustomerLedger,
+  } = useCustomers();
+
   const [showModal, setShowModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState(null);
+  const [selectedCustomerDetail, setSelectedCustomerDetail] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+
   const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState("ALL");
 
   const [formData, setFormData] = useState({
     name: "",
     businessName: "",
     phone: "",
-    customerType: "RETAIL",
+    email: "",
+    customerType: "INDIVIDUAL",
     city: "",
+    state: "",
+    creditLimit: "",
     openingBalance: "",
+    isActive: true,
   });
 
-  const loadCustomers = async () => {
+  const customerTypes = [
+    { key: "INDIVIDUAL", label: "Retail / Individual" },
+    { key: "WHOLESALE", label: "Wholesale Buyer" },
+    { key: "LANDSCAPER", label: "Landscaper / Contractor" },
+    { key: "NURSERY_TRADER", label: "Nursery Reseller" },
+    { key: "EXPORTER", label: "Plant Exporter" },
+    { key: "CORPORATE", label: "Corporate Account" },
+  ];
+
+  const handleOpenAdd = () => {
+    setEditingCustomer(null);
+    setFormData({
+      name: "",
+      businessName: "",
+      phone: "",
+      email: "",
+      customerType: "INDIVIDUAL",
+      city: "",
+      state: "",
+      creditLimit: "",
+      openingBalance: "",
+      isActive: true,
+    });
+    setShowModal(true);
+  };
+
+  const handleOpenEdit = (c) => {
+    setEditingCustomer(c);
+    setFormData({
+      name: c.name || "",
+      businessName: c.businessName || "",
+      phone: c.phone || "",
+      email: c.email || "",
+      customerType: c.customerType || "INDIVIDUAL",
+      city: c.billingAddress?.city || "",
+      state: c.billingAddress?.state || "",
+      creditLimit: c.creditLimit || "",
+      openingBalance: c.openingBalance || "",
+      isActive: c.isActive !== false,
+    });
+    setShowModal(true);
+  };
+
+  const handleOpenLedger = async (c) => {
     try {
-      setLoading(true);
-      setError("");
-      const res = await apiRequest("/customers");
-      if (res.success && Array.isArray(res.data)) {
-        setCustomers(res.data);
+      const res = await getCustomerLedger(c._id || c.id);
+      if (res.success && res.data) {
+        setSelectedCustomerDetail(res.data);
+        setShowDetailModal(true);
       }
     } catch (err) {
-      setError(err.message || "Failed to load customers from API");
-    } finally {
-      setLoading(false);
+      alert("Error loading customer ledger statement: " + err.message);
     }
   };
 
-  useEffect(() => {
-    loadCustomers();
-  }, []);
-
-  const handleAdd = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.phone) return;
 
     try {
       setSubmitting(true);
-      const res = await apiRequest("/customers", {
-        method: "POST",
-        body: JSON.stringify({
-          name: formData.name,
-          businessName: formData.businessName || null,
-          phone: formData.phone,
-          customerType: formData.customerType,
-          billingAddress: { city: formData.city },
-          openingBalance: Number(formData.openingBalance) || 0,
-        }),
-      });
+      const isEditing = Boolean(editingCustomer);
+      const customerId = editingCustomer?._id || editingCustomer?.id;
 
+      const payload = {
+        name: formData.name.trim(),
+        businessName: formData.businessName ? formData.businessName.trim() : null,
+        phone: formData.phone.trim(),
+        email: formData.email ? formData.email.trim() : null,
+        customerType: formData.customerType,
+        billingAddress: {
+          city: formData.city || null,
+          state: formData.state || null,
+        },
+        creditLimit: Number(formData.creditLimit) || 0,
+        openingBalance: Number(formData.openingBalance) || 0,
+        isActive: Boolean(formData.isActive),
+      };
+
+      const res = await saveCustomer({ isEditing, customerId, payload });
       if (res.success) {
         setShowModal(false);
-        setFormData({ name: "", businessName: "", phone: "", customerType: "RETAIL", city: "", openingBalance: "" });
-        loadCustomers();
+        await loadCustomers();
       }
     } catch (err) {
-      alert("Error adding customer: " + err.message);
+      alert("Error: " + err.message);
     } finally {
       setSubmitting(false);
     }
   };
 
-  const filtered = customers.filter(
-    (c) =>
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      (c.businessName && c.businessName.toLowerCase().includes(search.toLowerCase())) ||
-      c.phone.includes(search)
-  );
+  const handleDelete = async (c) => {
+    const id = c._id || c.id;
+    if (!confirm(`Are you sure you want to delete customer "${c.name}"?`)) return;
+
+    try {
+      const res = await deleteCustomer(id);
+      if (res.success) {
+        await loadCustomers();
+      }
+    } catch (err) {
+      alert("Error deleting customer: " + err.message);
+    }
+  };
+
+  const filtered = customers.filter((c) => {
+    const matchSearch =
+      c.name?.toLowerCase().includes(search.toLowerCase()) ||
+      c.businessName?.toLowerCase().includes(search.toLowerCase()) ||
+      c.phone?.includes(search) ||
+      c.customerCode?.toLowerCase().includes(search.toLowerCase());
+
+    const matchType = typeFilter === "ALL" || c.customerType === typeFilter;
+    return matchSearch && matchType;
+  });
 
   return (
     <div className="space-y-6">
+      {/* 1. Header Toolbar */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Customer Directory & Ledger</h1>
-          <p className="text-sm text-slate-500">
-            Wholesale buyers, landscapers, retail clients, credit limits, and outstanding balances synced with the API.
+          <h1 className="text-2xl font-bold tracking-tight text-[#1F2937]">Customer Directory & Accounts</h1>
+          <p className="text-sm text-[#64748B]">
+            Manage retail buyers, wholesale landscapers, credit limits, and real-time outstanding ledger balances.
           </p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="inline-flex items-center gap-2 rounded-xl bg-[#1b6840] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#155433] transition"
-        >
-          <Plus size={18} /> Add Customer
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={loadCustomers}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-[#E2EAE3] bg-white px-3.5 py-2.5 text-xs font-semibold text-[#1F2937] hover:bg-[#F5F7F1] transition shadow-xs cursor-pointer"
+          >
+            <RotateCw size={14} /> Refresh
+          </button>
+          <button
+            onClick={handleOpenAdd}
+            className="inline-flex items-center gap-2 rounded-xl bg-[#123D2B] px-4 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-[#176B45] transition cursor-pointer"
+          >
+            <Plus size={18} /> Add Customer
+          </button>
+        </div>
       </div>
 
       {error && (
         <div className="flex items-center gap-2 rounded-xl bg-amber-50 p-4 text-sm text-amber-800 border border-amber-200">
           <AlertCircle size={18} className="shrink-0" />
-          <span>{error}. Check API server connectivity.</span>
+          <span>{error}</span>
         </div>
       )}
 
-      <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5 shadow-sm">
-        <Search size={18} className="text-slate-400" />
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search customer by name, business firm, or phone number..."
-          className="w-full bg-transparent text-sm text-slate-800 focus:outline-none"
+      {/* 2. Filter & Search Bar */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative max-w-sm flex-1">
+          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B]" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name, business, mobile, or code..."
+            className="w-full rounded-xl border border-[#E2EAE3] bg-white py-2 pl-10 pr-4 text-xs text-[#1F2937] placeholder-[#64748B] focus:border-[#176B45] focus:outline-none"
+          />
+        </div>
+
+        <div className="flex rounded-xl bg-white border border-[#E2EAE3] p-1 text-xs font-semibold overflow-x-auto">
+          <button
+            onClick={() => setTypeFilter("ALL")}
+            className={`rounded-lg px-3 py-1.5 transition cursor-pointer ${
+              typeFilter === "ALL" ? "bg-[#123D2B] text-white shadow-xs" : "text-[#64748B] hover:text-[#1F2937]"
+            }`}
+          >
+            All Accounts
+          </button>
+          {customerTypes.slice(0, 4).map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTypeFilter(t.key)}
+              className={`rounded-lg px-3 py-1.5 transition cursor-pointer whitespace-nowrap ${
+                typeFilter === t.key ? "bg-[#123D2B] text-white shadow-xs" : "text-[#64748B] hover:text-[#1F2937]"
+              }`}
+            >
+              {t.label.split("/")[0].trim()}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 3. Customer Cards Grid Component */}
+      {loading ? (
+        <div className="flex h-64 items-center justify-center">
+          <Loader2 className="animate-spin text-[#176B45]" size={32} />
+        </div>
+      ) : (
+        <CustomerListGrid
+          customers={filtered}
+          onEdit={handleOpenEdit}
+          onDelete={handleDelete}
+          onViewLedger={handleOpenLedger}
         />
-      </div>
-
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        {loading ? (
-          <div className="flex flex-col items-center justify-center p-12 text-slate-500">
-            <Loader2 size={32} className="animate-spin text-emerald-700 mb-2" />
-            <span className="text-sm">Fetching customer accounts...</span>
-          </div>
-        ) : (
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-100 bg-slate-50/75 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              <tr>
-                <th className="px-6 py-4">Customer / Firm</th>
-                <th className="px-6 py-4">Category</th>
-                <th className="px-6 py-4">Phone / City</th>
-                <th className="px-6 py-4">Opening Balance</th>
-                <th className="px-6 py-4 text-right">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-10 text-center text-slate-400">
-                    No customers found. Click "Add Customer" to add a wholesale client or landscaper.
-                  </td>
-                </tr>
-              ) : (
-                filtered.map((c) => (
-                  <tr key={c._id || c.id} className="hover:bg-slate-50/50 transition">
-                    <td className="px-6 py-4 font-medium text-slate-900">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
-                          <User size={18} />
-                        </div>
-                        <div>
-                          <div>{c.name}</div>
-                          <div className="text-xs text-slate-400 font-normal">
-                            {c.businessName ? `${c.businessName} • ${c.customerCode}` : c.customerCode}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">
-                      <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
-                        {c.customerType}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">
-                      <div>{c.phone}</div>
-                      <div className="text-xs text-slate-400">{c.billingAddress?.city || "—"}</div>
-                    </td>
-                    <td className="px-6 py-4 font-semibold text-slate-800">
-                      ₹{Number(c.openingBalance || 0).toLocaleString("en-IN")}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
-                        Active
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
-            <h2 className="text-lg font-bold text-slate-900">Create New Customer Profile</h2>
-            <form onSubmit={handleAdd} className="mt-4 space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 uppercase">Contact Person Name</label>
-                <input
-                  required
-                  type="text"
-                  placeholder="e.g. Ramesh Patel"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="mt-1 w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-emerald-600 focus:outline-none"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 uppercase">Business / Firm (Optional)</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Lotus Greenery & Landscaping"
-                    value={formData.businessName}
-                    onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
-                    className="mt-1 w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-emerald-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 uppercase">Customer Type</label>
-                  <select
-                    value={formData.customerType}
-                    onChange={(e) => setFormData({ ...formData, customerType: e.target.value })}
-                    className="mt-1 w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-emerald-600 focus:outline-none bg-white"
-                  >
-                    <option value="RETAIL">Retail Customer</option>
-                    <option value="WHOLESALE">Wholesale Buyer</option>
-                    <option value="LANDSCAPER">Landscaper</option>
-                    <option value="NURSERY_TRADER">Nursery Trader</option>
-                    <option value="EXPORTER">Plant Exporter</option>
-                    <option value="CORPORATE">Corporate</option>
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 uppercase">Phone Number</label>
-                  <input
-                    required
-                    type="text"
-                    placeholder="+91 98765 43210"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="mt-1 w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-emerald-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 uppercase">City / Location</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Hyderabad"
-                    value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    className="mt-1 w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-emerald-600 focus:outline-none"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 uppercase">Opening Balance (₹)</label>
-                <input
-                  type="number"
-                  placeholder="0.00"
-                  value={formData.openingBalance}
-                  onChange={(e) => setFormData({ ...formData, openingBalance: e.target.value })}
-                  className="mt-1 w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-emerald-600 focus:outline-none"
-                />
-              </div>
-              <div className="mt-6 flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="rounded-xl bg-[#1b6840] px-5 py-2 text-sm font-semibold text-white hover:bg-[#155433] disabled:opacity-50"
-                >
-                  {submitting ? "Saving..." : "Save Customer"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
       )}
+
+      {/* 4. Add & Edit Modal Component */}
+      <CustomerFormModal
+        isOpen={showModal}
+        isEditing={Boolean(editingCustomer)}
+        formData={formData}
+        setFormData={setFormData}
+        submitting={submitting}
+        onSubmit={handleSubmit}
+        onClose={() => setShowModal(false)}
+      />
+
+      {/* 5. Financial Ledger Modal Component */}
+      <CustomerLedgerModal
+        isOpen={showDetailModal}
+        customerDetail={selectedCustomerDetail}
+        onClose={() => setShowDetailModal(false)}
+      />
     </div>
   );
 }
-
