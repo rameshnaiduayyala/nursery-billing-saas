@@ -12,17 +12,10 @@ export default function InvoiceItemsTable({
 }) {
   return (
     <div className="mt-8">
-      <div className="flex items-center justify-between mb-3">
+      <div className="mb-3">
         <h3 className="text-sm font-bold uppercase tracking-wider text-[#1F2937]">
           Plant Line Items ({items.length})
         </h3>
-        <button
-          type="button"
-          onClick={onAddItem}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-[#123D2B]/10 px-3 py-1.5 text-xs font-bold text-[#123D2B] hover:bg-[#123D2B]/20 transition cursor-pointer"
-        >
-          <Plus size={14} /> Add Row
-        </button>
       </div>
 
       <div className="overflow-x-auto rounded-2xl border border-[#E2EAE3]">
@@ -205,6 +198,19 @@ export default function InvoiceItemsTable({
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Small Add Row Icon Button below the last row */}
+      <div className="mt-2.5 flex items-center">
+        <button
+          type="button"
+          onClick={onAddItem}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-[#E2EAE3] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#123D2B] hover:bg-[#F5F7F1] hover:border-[#176B45]/40 transition shadow-2xs cursor-pointer"
+          title="Add new line item"
+        >
+          <Plus size={13} className="text-[#176B45]" />
+          <span>Add Plant</span>
+        </button>
       </div>
     </div>
   );

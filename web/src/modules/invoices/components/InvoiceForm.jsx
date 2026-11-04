@@ -212,25 +212,16 @@ export default function InvoiceForm({
     setItems(items.filter((_, i) => i !== index));
   };
 
-  const addCharge = () => {
-    setCharges([
-      ...charges,
-      {
-        name: "",
-        description: "",
-        amount: 0,
-      },
-    ]);
+  const handleAddCharge = (newCharge) => {
+    setCharges((prev) => [...prev, newCharge]);
   };
 
-  const handleChargeChange = (index, field, value) => {
-    const updated = [...charges];
-    updated[index][field] = value;
-    setCharges(updated);
+  const handleUpdateCharge = (index, updatedCharge) => {
+    setCharges((prev) => prev.map((c, i) => (i === index ? updatedCharge : c)));
   };
 
   const removeCharge = (index) => {
-    setCharges(charges.filter((_, i) => i !== index));
+    setCharges((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = (e) => {
@@ -345,8 +336,8 @@ export default function InvoiceForm({
         {/* Additional Charges (Charge Name, Description, Amount) */}
         <AdditionalChargesSection
           charges={charges}
-          onAddCharge={addCharge}
-          onChargeChange={handleChargeChange}
+          onAddCharge={handleAddCharge}
+          onUpdateCharge={handleUpdateCharge}
           onRemoveCharge={removeCharge}
         />
 
