@@ -1,18 +1,26 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import AppLayout from "./components/layout/AppLayout";
-import DashboardPage from "./pages/DashboardPage";
-import PlaceholderPage from "./pages/PlaceholderPage";
-import ProductsPage from "./pages/ProductsPage";
-import CustomersPage from "./pages/CustomersPage";
-import InvoicesPage from "./pages/InvoicesPage";
-import QuotationsPage from "./pages/QuotationsPage";
-import PaymentsPage from "./pages/PaymentsPage";
-import BranchesPage from "./pages/BranchesPage";
-import ExpensesPage from "./pages/ExpensesPage";
-import SettingsPage from "./pages/SettingsPage";
-import AdminOrganizationsPage from "./pages/AdminOrganizationsPage";
-import { LoginPage, RegisterPage } from "./pages/AuthPages";
+import RoleBasedLayout from "./components/layout/RoleBasedLayout";
+
+// Module Pages
+import { LoginPage, RegisterPage } from "./modules/auth/AuthPages";
+import DashboardPage from "./modules/dashboard/DashboardPage";
+import BranchesPage from "./modules/branches/BranchesPage";
+import CustomersPage from "./modules/customers/CustomersPage";
+import ProductsPage from "./modules/products/ProductsPage";
+import QuotationsPage from "./modules/quotations/QuotationsPage";
+import InvoicesPage from "./modules/invoices/InvoicesPage";
+import PaymentsPage from "./modules/payments/PaymentsPage";
+import ExpensesPage from "./modules/expenses/ExpensesPage";
+import SettingsPage from "./modules/settings/SettingsPage";
+import AdminOrganizationsPage from "./modules/admin/AdminOrganizationsPage";
+import EmployeesPage from "./modules/employees/EmployeesPage";
+import RolesPage from "./modules/roles/RolesPage";
+import ChargesPage from "./modules/charges/ChargesPage";
+import ReportsPage from "./modules/reports/ReportsPage";
+import NotificationsPage from "./modules/notifications/NotificationsPage";
+import FilesPage from "./modules/files/FilesPage";
+import CustomerPortalPage from "./modules/portal/CustomerPortalPage";
 
 /**
  * Route guard that redirects unauthenticated users to /
@@ -22,7 +30,7 @@ function ProtectedLayout() {
   if (!user) {
     return <Navigate to="/" replace />;
   }
-  return <AppLayout />;
+  return <RoleBasedLayout />;
 }
 
 export default function App() {
@@ -38,32 +46,21 @@ export default function App() {
         <Route element={<ProtectedLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/branches" element={<BranchesPage />} />
+          <Route path="/employees" element={<EmployeesPage />} />
+          <Route path="/roles" element={<RolesPage />} />
           <Route path="/customers" element={<CustomersPage />} />
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/quotations" element={<QuotationsPage />} />
           <Route path="/invoices" element={<InvoicesPage />} />
+          <Route path="/charges" element={<ChargesPage />} />
           <Route path="/payments" element={<PaymentsPage />} />
           <Route path="/expenses" element={<ExpensesPage />} />
+          <Route path="/reports" element={<ReportsPage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/files" element={<FilesPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/portal" element={<CustomerPortalPage />} />
           <Route path="/admin/organizations" element={<AdminOrganizationsPage />} />
-          <Route
-            path="/reports"
-            element={
-              <PlaceholderPage
-                title="Reports & Financial Statements"
-                description="Review sales, customer ledgers, and branch performance."
-              />
-            }
-          />
-          <Route
-            path="/portal"
-            element={
-              <PlaceholderPage
-                title="Customer Portal"
-                description="Customer-facing quotations, invoices, payments and receipts."
-              />
-            }
-          />
         </Route>
 
         {/* Fallback unknown paths to root */}
