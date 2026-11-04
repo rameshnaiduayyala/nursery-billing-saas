@@ -9,3 +9,4 @@ export default async function organizationRoutes(app) {
   app.patch("/organizations/profile", updateOrganizationProfile);
   app.get("/organizations/settings", getOrganizationSettings);
 }
+

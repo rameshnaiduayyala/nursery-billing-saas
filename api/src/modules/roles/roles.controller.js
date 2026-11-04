@@ -108,3 +108,4 @@ export async function deleteRole(request, reply) {
   await Role.deleteOne({ _id: role._id });
   return reply.send({ success: true, message: "Role deleted successfully" });
 }
+

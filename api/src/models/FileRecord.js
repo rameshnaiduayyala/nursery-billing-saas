@@ -24,3 +24,4 @@ fileRecordSchema.index({ organizationId: 1, category: 1 });
 fileRecordSchema.index({ entityType: 1, entityId: 1 });
 
 export const FileRecord = mongoose.model("FileRecord", fileRecordSchema);
+

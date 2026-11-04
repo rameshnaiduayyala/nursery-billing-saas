@@ -78,3 +78,4 @@ export async function markAllNotificationsAsRead(request, reply) {
 
   return reply.send({ success: true, message: "All notifications marked as read" });
 }
+

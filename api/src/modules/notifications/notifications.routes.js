@@ -11,3 +11,4 @@ export default async function notificationRoutes(app) {
   app.patch("/notifications/:id/read", markNotificationAsRead);
   app.patch("/notifications/read-all", markAllNotificationsAsRead);
 }
+

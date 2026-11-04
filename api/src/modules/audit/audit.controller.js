@@ -17,3 +17,4 @@ export async function listAuditLogs(request, reply) {
 
   return reply.send({ success: true, data: logs });
 }
+

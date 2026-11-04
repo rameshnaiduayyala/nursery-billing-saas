@@ -14,3 +14,4 @@ export default async function roleRoutes(app) {
   app.patch("/roles/:id", updateRole);
   app.delete("/roles/:id", deleteRole);
 }
+

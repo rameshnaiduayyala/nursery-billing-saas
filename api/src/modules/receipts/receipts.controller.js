@@ -32,3 +32,4 @@ export async function getReceiptById(request, reply) {
 
   return reply.send({ success: true, data: receipt });
 }
+

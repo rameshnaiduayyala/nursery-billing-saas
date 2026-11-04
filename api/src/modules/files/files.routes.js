@@ -11,3 +11,4 @@ export default async function fileRoutes(app) {
   app.get("/files/:id", getFileById);
   app.delete("/files/:id", deleteFile);
 }
+

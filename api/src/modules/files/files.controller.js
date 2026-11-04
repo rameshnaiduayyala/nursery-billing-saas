@@ -69,3 +69,4 @@ export async function deleteFile(request, reply) {
 
   return reply.send({ success: true, message: "File record deleted successfully" });
 }
+
