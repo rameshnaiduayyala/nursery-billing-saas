@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Plus, RotateCw, AlertCircle, X, FileText, ReceiptText } from "lucide-react";
 import { useInvoices } from "./hooks/useInvoices";
 import InvoiceListTable from "./components/InvoiceListTable";
@@ -8,10 +8,23 @@ import InvoiceDetailModal from "./components/InvoiceDetailModal";
 
 export default function InvoicesPage({ defaultFilter = "ALL" }) {
   const navigate = useNavigate();
-  // Filter tab: 'ALL' | 'INVOICE' | 'QUOTATION'
-  const [activeTab, setActiveTab] = useState(defaultFilter);
+  const location = useLocation();
+
+  // Determine active tab from URL path (/quotations -> QUOTATION, /invoices -> INVOICE) or prop
+  const getTabFromPath = () => {
+    if (location.pathname.startsWith("/quotations")) return "QUOTATION";
+    if (location.pathname.startsWith("/invoices")) return "INVOICE";
+    return defaultFilter;
+  };
+
+  const [activeTab, setActiveTab] = useState(getTabFromPath);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [editingInvoice, setEditingInvoice] = useState(null);
+
+  // Sync tab whenever URL pathname changes (e.g. clicking Quotations vs Invoices in sidebar)
+  useEffect(() => {
+    setActiveTab(getTabFromPath());
+  }, [location.pathname]);
 
   const {
     invoices,
@@ -137,7 +150,9 @@ export default function InvoicesPage({ defaultFilter = "ALL" }) {
       <div className="flex border-b border-[#E2EAE3] gap-2">
         <button
           type="button"
-          onClick={() => setActiveTab("ALL")}
+          onClick={() => {
+            setActiveTab("ALL");
+          }}
           className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition cursor-pointer ${
             activeTab === "ALL"
               ? "border-[#123D2B] text-[#123D2B]"
@@ -152,7 +167,12 @@ export default function InvoicesPage({ defaultFilter = "ALL" }) {
 
         <button
           type="button"
-          onClick={() => setActiveTab("INVOICE")}
+          onClick={() => {
+            setActiveTab("INVOICE");
+            if (location.pathname.startsWith("/quotations")) {
+              navigate("/invoices", { replace: true });
+            }
+          }}
           className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition cursor-pointer ${
             activeTab === "INVOICE"
               ? "border-[#123D2B] text-[#123D2B]"
@@ -168,7 +188,12 @@ export default function InvoicesPage({ defaultFilter = "ALL" }) {
 
         <button
           type="button"
-          onClick={() => setActiveTab("QUOTATION")}
+          onClick={() => {
+            setActiveTab("QUOTATION");
+            if (location.pathname.startsWith("/invoices")) {
+              navigate("/quotations", { replace: true });
+            }
+          }}
           className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition cursor-pointer ${
             activeTab === "QUOTATION"
               ? "border-[#123D2B] text-[#123D2B]"
