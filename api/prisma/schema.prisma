@@ -1,0 +1,431 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum OrganizationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum MembershipStatus {
+  INVITED
+  ACTIVE
+  SUSPENDED
+}
+
+enum DocumentStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  ISSUED
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+  CONVERTED
+}
+
+enum PaymentMethod {
+  CASH
+  UPI
+  BANK_TRANSFER
+  CHEQUE
+  OTHER
+}
+
+enum ChargeType {
+  LOADING
+  UNLOADING
+  TRANSPORT
+  LABOUR
+  PACKAGING
+  VEHICLE
+  OTHER
+}
+
+enum CalculationType {
+  FIXED
+  PER_UNIT
+  PER_BAG
+  PER_TONNE
+  PER_VEHICLE
+  PER_DAY
+  PER_WORKER
+  PERCENTAGE
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String
+  email        String   @unique
+  phone        String?
+  passwordHash String
+  isActive     Boolean  @default(true)
+  memberships Membership[]
+  customerLinks CustomerUser[]
+  refreshTokens RefreshToken[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Organization {
+  id          String @id @default(uuid()) @db.Uuid
+  name        String
+  slug        String @unique
+  status      OrganizationStatus @default(PENDING)
+  currency    String @default("INR")
+  timezone    String @default("Asia/Kolkata")
+  phone       String?
+  email       String?
+  logoUrl     String?
+  address     Json?
+  branches    Branch[]
+  memberships Membership[]
+  customers   Customer[]
+  products    Product[]
+  quotations  Quotation[]
+  invoices    Invoice[]
+  payments    Payment[]
+  roles       Role[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@index([status, createdAt])
+}
+
+model Branch {
+  id             String @id @default(uuid()) @db.Uuid
+  organizationId String @db.Uuid
+  name           String
+  code           String
+  phone          String?
+  address        Json?
+  isDefault      Boolean @default(false)
+  isActive       Boolean @default(true)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  branchMembers BranchMembership[]
+  quotations     Quotation[]
+  invoices       Invoice[]
+  payments       Payment[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  @@unique([organizationId, code])
+  @@index([organizationId, isActive])
+}
+
+model Role {
+  id             String @id @default(uuid()) @db.Uuid
+  organizationId String @db.Uuid
+  name           String
+  key            String
+  isSystem       Boolean @default(false)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  memberships    Membership[]
+  permissions   RolePermission[]
+  @@unique([organizationId, key])
+}
+
+model Permission {
+  id          String @id @default(uuid()) @db.Uuid
+  key         String @unique
+  description String?
+  roles       RolePermission[]
+}
+
+model RolePermission {
+  roleId       String @db.Uuid
+  permissionId String @db.Uuid
+  role         Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  @@id([roleId, permissionId])
+}
+
+model Membership {
+  id             String @id @default(uuid()) @db.Uuid
+  userId         String @db.Uuid
+  organizationId String @db.Uuid
+  roleId         String @db.Uuid
+  status         MembershipStatus @default(ACTIVE)
+  user           User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  role           Role @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  branchAccess   BranchMembership[]
+  createdAt      DateTime @default(now())
+  @@unique([userId, organizationId])
+  @@index([organizationId, status])
+}
+
+model BranchMembership {
+  membershipId String @db.Uuid
+  branchId     String @db.Uuid
+  isDefault    Boolean @default(false)
+  membership   Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  branch       Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  @@id([membershipId, branchId])
+}
+
+model Customer {
+  id             String @id @default(uuid()) @db.Uuid
+  organizationId String @db.Uuid
+  customerCode   String
+  name           String
+  businessName   String?
+  phone          String
+  alternatePhone String?
+  email          String?
+  customerType   String @default("INDIVIDUAL")
+  billingAddress Json?
+  shippingAddress Json?
+  creditLimit    Decimal @default(0) @db.Decimal(14, 2)
+  openingBalance Decimal @default(0) @db.Decimal(14, 2)
+  isActive       Boolean @default(true)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  portalUsers    CustomerUser[]
+  quotations     Quotation[]
+  invoices       Invoice[]
+  payments       Payment[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  @@unique([organizationId, customerCode])
+  @@index([organizationId, name])
+  @@index([organizationId, phone])
+}
+
+model CustomerUser {
+  customerId String @db.Uuid
+  userId     String @db.Uuid
+  isPrimary  Boolean @default(false)
+  status     MembershipStatus @default(INVITED)
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  user       User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@id([customerId, userId])
+}
+
+model ProductCategory {
+  id             String @id @default(uuid()) @db.Uuid
+  organizationId String @db.Uuid
+  name           String
+  products       Product[]
+  @@unique([organizationId, name])
+}
+
+model Unit {
+  id             String @id @default(uuid()) @db.Uuid
+  organizationId String @db.Uuid
+  name           String
+  code           String
+  decimalAllowed Boolean @default(false)
+  products       Product[]
+  @@unique([organizationId, code])
+}
+
+model Product {
+  id             String @id @default(uuid()) @db.Uuid
+  organizationId String @db.Uuid
+  categoryId     String? @db.Uuid
+  unitId         String @db.Uuid
+  sku            String?
+  name           String
+  description    String?
+  plantVariety   String?
+  plantSize      String?
+  defaultRate    Decimal @default(0) @db.Decimal(14, 2)
+  isActive       Boolean @default(true)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  category       ProductCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  unit           Unit @relation(fields: [unitId], references: [id], onDelete: Restrict)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  @@unique([organizationId, sku])
+  @@index([organizationId, name])
+}
+
+model Quotation {
+  id             String @id @default(uuid()) @db.Uuid
+  organizationId String @db.Uuid
+  branchId       String @db.Uuid
+  customerId     String @db.Uuid
+  quotationNumber String
+  status         DocumentStatus @default(DRAFT)
+  quotationDate  DateTime @default(now())
+  validUntil     DateTime?
+  subtotal       Decimal @db.Decimal(14, 2)
+  discountAmount Decimal @default(0) @db.Decimal(14, 2)
+  chargesTotal   Decimal @default(0) @db.Decimal(14, 2)
+  grandTotal     Decimal @db.Decimal(14, 2)
+  notes          String?
+  termsText      String?
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  branch         Branch @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  customer       Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  items          QuotationItem[]
+  charges        QuotationCharge[]
+  invoice        Invoice?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  @@unique([organizationId, branchId, quotationNumber])
+  @@index([organizationId, customerId, status])
+  @@index([branchId, quotationDate])
+}
+
+model QuotationItem {
+  id          String @id @default(uuid()) @db.Uuid
+  quotationId String @db.Uuid
+  productId   String? @db.Uuid
+  description String
+  quantity    Decimal @db.Decimal(14, 3)
+  unitName    String
+  unitPrice   Decimal @db.Decimal(14, 2)
+  discountAmount Decimal @default(0) @db.Decimal(14, 2)
+  lineTotal   Decimal @db.Decimal(14, 2)
+  sortOrder   Int @default(0)
+  quotation   Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+}
+
+model QuotationCharge {
+  id             String @id @default(uuid()) @db.Uuid
+  quotationId    String @db.Uuid
+  chargeType     ChargeType
+  name           String
+  calculationType CalculationType @default(FIXED)
+  quantity       Decimal @default(1) @db.Decimal(14, 3)
+  rate           Decimal @default(0) @db.Decimal(14, 2)
+  amount         Decimal @db.Decimal(14, 2)
+  quotation      Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+}
+
+model Invoice {
+  id             String @id @default(uuid()) @db.Uuid
+  organizationId String @db.Uuid
+  branchId       String @db.Uuid
+  customerId     String @db.Uuid
+  quotationId    String? @unique @db.Uuid
+  invoiceNumber  String
+  status         DocumentStatus @default(DRAFT)
+  invoiceDate    DateTime @default(now())
+  dueDate        DateTime?
+  subtotal       Decimal @db.Decimal(14, 2)
+  discountAmount Decimal @default(0) @db.Decimal(14, 2)
+  chargesTotal   Decimal @default(0) @db.Decimal(14, 2)
+  grandTotal     Decimal @db.Decimal(14, 2)
+  amountPaid     Decimal @default(0) @db.Decimal(14, 2)
+  balanceDue     Decimal @db.Decimal(14, 2)
+  customerSnapshot Json?
+  branchSnapshot Json?
+  notes          String?
+  issuedAt       DateTime?
+  cancelledAt    DateTime?
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  branch         Branch @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  customer       Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  quotation      Quotation? @relation(fields: [quotationId], references: [id], onDelete: Restrict)
+  items          InvoiceItem[]
+  charges        InvoiceCharge[]
+  allocations    PaymentAllocation[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  @@unique([organizationId, branchId, invoiceNumber])
+  @@index([organizationId, customerId, status])
+  @@index([branchId, invoiceDate])
+}
+
+model InvoiceItem {
+  id             String @id @default(uuid()) @db.Uuid
+  invoiceId      String @db.Uuid
+  productId      String? @db.Uuid
+  description    String
+  quantity       Decimal @db.Decimal(14, 3)
+  unitName       String
+  unitPrice      Decimal @db.Decimal(14, 2)
+  discountAmount Decimal @default(0) @db.Decimal(14, 2)
+  lineTotal      Decimal @db.Decimal(14, 2)
+  sortOrder      Int @default(0)
+  invoice        Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+model InvoiceCharge {
+  id              String @id @default(uuid()) @db.Uuid
+  invoiceId       String @db.Uuid
+  chargeType      ChargeType
+  name            String
+  calculationType CalculationType @default(FIXED)
+  quantity        Decimal @default(1) @db.Decimal(14, 3)
+  rate            Decimal @default(0) @db.Decimal(14, 2)
+  amount          Decimal @db.Decimal(14, 2)
+  invoice         Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id             String @id @default(uuid()) @db.Uuid
+  organizationId String @db.Uuid
+  branchId       String @db.Uuid
+  customerId     String @db.Uuid
+  paymentNumber  String
+  amount         Decimal @db.Decimal(14, 2)
+  paymentMethod  PaymentMethod
+  reference      String?
+  paymentDate    DateTime @default(now())
+  notes          String?
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  branch         Branch @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  customer       Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  allocations    PaymentAllocation[]
+  createdAt      DateTime @default(now())
+  @@unique([organizationId, branchId, paymentNumber])
+  @@index([organizationId, customerId, paymentDate])
+}
+
+model PaymentAllocation {
+  id              String @id @default(uuid()) @db.Uuid
+  paymentId       String @db.Uuid
+  invoiceId       String @db.Uuid
+  allocatedAmount Decimal @db.Decimal(14, 2)
+  payment         Payment @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  invoice         Invoice @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  createdAt       DateTime @default(now())
+  @@unique([paymentId, invoiceId])
+  @@index([invoiceId])
+}
+
+model DocumentSequence {
+  id             String @id @default(uuid()) @db.Uuid
+  organizationId String @db.Uuid
+  branchId       String @db.Uuid
+  documentType   String
+  financialYear  String
+  prefix         String
+  nextNumber     Int @default(1)
+  @@unique([organizationId, branchId, documentType, financialYear])
+}
+
+model RefreshToken {
+  id        String @id @default(uuid()) @db.Uuid
+  userId    String @db.Uuid
+  tokenHash String @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id             String @id @default(uuid()) @db.Uuid
+  organizationId String? @db.Uuid
+  actorUserId    String? @db.Uuid
+  action         String
+  entityType     String
+  entityId       String?
+  metadata       Json?
+  ipAddress      String?
+  createdAt      DateTime @default(now())
+  @@index([organizationId, createdAt])
+  @@index([entityType, entityId])
+}
