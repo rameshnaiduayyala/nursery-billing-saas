@@ -26,7 +26,6 @@ export async function getHealthDetails(request, reply) {
     },
     server: {
       nodeVersion: process.version,
-      deploymentVersion: "nursery-api-v2-20261105",
       platform: process.platform,
       arch: process.arch,
       memoryUsageMb: {
@@ -51,7 +50,6 @@ export async function getHealthDetails(request, reply) {
       expenses: "/api/v1/expenses",
       reports: "/api/v1/reports",
       admin: "/api/v1/admin",
-      sfdfdf:"Test",
     },
   };
 }
