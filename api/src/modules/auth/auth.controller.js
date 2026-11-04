@@ -9,6 +9,7 @@ const registerSchema = z.object({
   phone: z.string().min(10),
   password: z.string().min(8),
   businessAddress: z.any().optional(),
+  address: z.string().optional(),
   city: z.string().optional(),
   state: z.string().optional(),
   pincode: z.string().optional(),
@@ -25,7 +26,7 @@ export async function register(request, reply) {
     return reply.code(400).send({ success: false, message: "Validation error", errors: parsed.error.flatten() });
   }
 
-  const { businessName, ownerName, email, phone, password, city, state, pincode } = parsed.data;
+  const { businessName, ownerName, email, phone, password, address, city, state, pincode } = parsed.data;
 
   const existingUser = await User.findOne({ email });
   if (existingUser) {
@@ -56,7 +57,7 @@ export async function register(request, reply) {
     status: "PENDING",
     phone,
     email,
-    address: { city, state, pincode },
+    address: { street: address || null, city, state, pincode },
   });
 
   // 3. Create Default Main Branch
@@ -65,6 +66,7 @@ export async function register(request, reply) {
     name: "Main Branch",
     code: "MAIN",
     phone,
+    address: { street: address || null, city, state, pincode },
     isDefault: true,
     isActive: true,
   });

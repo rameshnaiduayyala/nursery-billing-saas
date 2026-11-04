@@ -1,8 +1,14 @@
 import React from "react";
-import { Printer, X } from "lucide-react";
+import { Printer, Download, X, Loader2 } from "lucide-react";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import ProfessionalInvoicePDF from "./ProfessionalInvoicePDF";
 
 export default function InvoiceDetailModal({ invoice, onClose }) {
   if (!invoice) return null;
+
+  const isQuotation = invoice.documentType === "QUOTATION";
+  const docTitle = isQuotation ? "Quotation" : "Invoice";
+  const fileName = `${invoice.invoiceNumber || (isQuotation ? "QUOTATION" : "INVOICE")}.pdf`;
 
   return (
     <div className="rounded-2xl border border-[#E2EAE3] bg-white p-8 shadow-xs max-w-3xl mx-auto space-y-6">
@@ -10,12 +16,12 @@ export default function InvoiceDetailModal({ invoice, onClose }) {
         <div>
           <span
             className={`rounded px-2.5 py-1 text-xs font-bold uppercase tracking-wider ${
-              invoice.documentType === "QUOTATION"
+              isQuotation
                 ? "bg-amber-600 text-white"
                 : "bg-[#123D2B] text-white"
             }`}
           >
-            {invoice.documentType === "QUOTATION" ? "Plant Quotation" : "Non-GST Invoice"}
+            {isQuotation ? "Plant Quotation" : "Non-GST Invoice"}
           </span>
           <h2 className="mt-3 text-2xl font-extrabold text-[#1F2937]">{invoice.invoiceNumber}</h2>
           <p className="text-xs text-[#64748B]">
@@ -23,12 +29,26 @@ export default function InvoiceDetailModal({ invoice, onClose }) {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {/* React PDF Download Button */}
+          <PDFDownloadLink
+            document={<ProfessionalInvoicePDF invoice={invoice} />}
+            fileName={fileName}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-[#123D2B] px-3.5 py-2 text-xs font-bold text-white hover:bg-[#176B45] transition cursor-pointer shadow-xs"
+          >
+            {({ loading }) => (
+              <>
+                {loading ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
+                <span>{loading ? "Preparing PDF..." : `Download PDF`}</span>
+              </>
+            )}
+          </PDFDownloadLink>
+
           <button
             type="button"
             onClick={() => window.print()}
             className="inline-flex items-center gap-1.5 rounded-xl border border-[#E2EAE3] bg-white px-3.5 py-2 text-xs font-semibold text-[#1F2937] hover:bg-[#F5F7F1] cursor-pointer"
           >
-            <Printer size={15} /> Print {invoice.documentType === "QUOTATION" ? "Quotation" : "Invoice"}
+            <Printer size={15} /> Print
           </button>
           <button
             type="button"

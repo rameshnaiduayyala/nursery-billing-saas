@@ -228,6 +228,7 @@ export function RegisterPage() {
     email: "",
     phone: "",
     password: "",
+    address: "",
     city: "",
     state: "",
     pincode: "",
@@ -375,6 +376,22 @@ export function RegisterPage() {
                     placeholder="Min 8 characters"
                   />
                 </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">
+                Nursery / Farm Street Address
+              </label>
+              <div className="relative">
+                <MapPin size={17} className="absolute left-3.5 top-3.5 text-slate-400" />
+                <input
+                  type="text"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 pl-10 pr-3.5 py-2.5 text-sm focus:border-emerald-600 focus:outline-none"
+                  placeholder="e.g. Survey No. 42, Main Road, Near Canal"
+                />
               </div>
             </div>
 
