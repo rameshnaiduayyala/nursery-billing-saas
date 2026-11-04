@@ -50,6 +50,7 @@ export async function getHealthDetails(request, reply) {
       expenses: "/api/v1/expenses",
       reports: "/api/v1/reports",
       admin: "/api/v1/admin",
+      sfdfdf:"Test",
     },
   };
 }
