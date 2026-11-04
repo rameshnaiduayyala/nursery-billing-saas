@@ -19,7 +19,6 @@ export default function InvoicesPage({ defaultFilter = "ALL" }) {
 
   const [activeTab, setActiveTab] = useState(getTabFromPath);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
-  const [editingInvoice, setEditingInvoice] = useState(null);
 
   // Sync tab whenever URL pathname changes (e.g. clicking Quotations vs Invoices in sidebar)
   useEffect(() => {
@@ -35,7 +34,6 @@ export default function InvoicesPage({ defaultFilter = "ALL" }) {
     submitting,
     error,
     loadData,
-    updateInvoice,
     convertQuotationToInvoice,
     cancelInvoice,
     deleteInvoice,
@@ -47,14 +45,10 @@ export default function InvoicesPage({ defaultFilter = "ALL" }) {
     return (inv.documentType || "INVOICE") === activeTab;
   });
 
-  const handleEditSubmit = async (payload) => {
-    if (!editingInvoice) return;
-    const res = await updateInvoice(editingInvoice._id || editingInvoice.id, payload);
-    if (res.success) {
-      setEditingInvoice(null);
-    } else {
-      alert("Error updating document: " + (res.error || "Unknown error"));
-    }
+  const handleEditInvoice = (inv) => {
+    const isQuotation = inv.documentType === "QUOTATION";
+    const docId = inv._id || inv.id;
+    navigate(isQuotation ? `/quotations/${docId}/edit` : `/invoices/${docId}/edit`);
   };
 
   const handleConvertQuotation = async (inv) => {
@@ -221,51 +215,14 @@ export default function InvoicesPage({ defaultFilter = "ALL" }) {
           invoices={displayedInvoices}
           loading={loading}
           onViewInvoice={(invoice) => setSelectedInvoice(invoice)}
-          onEditInvoice={(invoice) => setEditingInvoice(invoice)}
+          onEditInvoice={handleEditInvoice}
           onConvertQuotation={handleConvertQuotation}
           onCancelInvoice={handleCancel}
           onDeleteInvoice={handleDelete}
         />
       </div>
 
-      {/* 4. Edit Modal / Overlay */}
-      {editingInvoice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="relative w-full max-w-5xl rounded-3xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto border border-[#E2EAE3]">
-            <div className="flex items-center justify-between border-b border-[#E2EAE3] pb-4 mb-4">
-              <div>
-                <h2 className="text-lg font-bold text-[#1F2937]">
-                  Edit {editingInvoice.documentType === "QUOTATION" ? "Quotation" : "Invoice"}{" "}
-                  {editingInvoice.invoiceNumber}
-                </h2>
-                <p className="text-xs text-[#64748B]">
-                  Modify plant line items, custom columns, or delivery tariffs.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setEditingInvoice(null)}
-                className="rounded-xl border border-[#E2EAE3] p-1.5 text-[#64748B] hover:bg-[#F5F7F1] cursor-pointer"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            <InvoiceForm
-              initialData={editingInvoice}
-              initialDocumentType={editingInvoice.documentType || "INVOICE"}
-              customers={customers}
-              branches={branches}
-              products={products}
-              onSubmit={handleEditSubmit}
-              onCancel={() => setEditingInvoice(null)}
-              submitting={submitting}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* 5. View Modal (Printable snapshot preview) */}
+      {/* 4. View Modal (Embedded PDF Viewer preview) */}
       {selectedInvoice && (
         <InvoiceDetailModal
           invoice={selectedInvoice}

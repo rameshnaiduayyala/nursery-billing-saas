@@ -10,6 +10,7 @@ import CustomersPage from "./modules/customers/CustomersPage";
 import ProductsPage from "./modules/products/ProductsPage";
 import InvoicesPage from "./modules/invoices/InvoicesPage";
 import CreateInvoicePage from "./modules/invoices/CreateInvoicePage";
+import EditInvoicePage from "./modules/invoices/EditInvoicePage";
 import PaymentsPage from "./modules/payments/PaymentsPage";
 import ExpensesPage from "./modules/expenses/ExpensesPage";
 import SettingsPage from "./modules/settings/SettingsPage";
@@ -52,6 +53,8 @@ export default function App() {
           <Route path="/quotations" element={<InvoicesPage defaultFilter="QUOTATION" />} />
           <Route path="/invoices" element={<InvoicesPage defaultFilter="INVOICE" />} />
           <Route path="/invoices/create" element={<CreateInvoicePage />} />
+          <Route path="/invoices/:id/edit" element={<EditInvoicePage />} />
+          <Route path="/quotations/:id/edit" element={<EditInvoicePage />} />
           <Route path="/payments" element={<PaymentsPage />} />
           <Route path="/expenses" element={<ExpensesPage />} />
           <Route path="/reports" element={<ReportsPage />} />

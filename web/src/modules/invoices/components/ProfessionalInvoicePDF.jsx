@@ -255,6 +255,30 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   signatureText: { fontSize: 7.5, color: C.muted },
+  watermarkWrapper: {
+    position: "absolute",
+    top: 250,
+    left: 40,
+    right: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 10,
+    transform: "rotate(-32deg)",
+  },
+  watermarkText: {
+    fontSize: 66,
+    fontWeight: "bold",
+    fontFamily: "Helvetica-Bold",
+    color: "#DC2626",
+    opacity: 0.16,
+    letterSpacing: 8,
+    textTransform: "uppercase",
+    borderWidth: 5,
+    borderColor: "#DC2626",
+    paddingVertical: 10,
+    paddingHorizontal: 26,
+    borderRadius: 8,
+  },
   footer: {
     position: "absolute",
     bottom: 25,
@@ -340,7 +364,12 @@ export default function ProfessionalInvoicePDF({
   };
 
   const isQuotation = invoice.documentType === "QUOTATION";
-  const docTitle = isQuotation ? "QUOTATION" : "NON-GST INVOICE";
+  const isCancelled = invoice.status === "CANCELLED";
+  const docTitle = isCancelled
+    ? "CANCELLED"
+    : isQuotation
+    ? "QUOTATION"
+    : "NON-GST INVOICE";
   const customerName =
     invoice.customerSnapshot?.name ||
     invoice.customerId?.name ||
@@ -353,6 +382,13 @@ export default function ProfessionalInvoicePDF({
   return (
     <Document title={`${invoice.invoiceNumber || "NurseryDesk-Invoice"}.pdf`}>
       <Page size="A4" style={styles.page} wrap>
+        {/* Cancelled Watermark Overlay */}
+        {isCancelled && (
+          <View style={styles.watermarkWrapper} fixed>
+            <Text style={styles.watermarkText}>CANCELLED</Text>
+          </View>
+        )}
+
         <View style={styles.header}>
           <View style={styles.brandBlock}>
             <Text style={styles.brandTitle}>{nursery.name}</Text>

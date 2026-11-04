@@ -9,7 +9,8 @@ export default function InvoiceDetailModal({ invoice, onClose }) {
   const [viewType, setViewType] = useState("pdf"); // 'pdf' | 'summary'
 
   const isQuotation = invoice.documentType === "QUOTATION";
-  const docTitle = isQuotation ? "Quotation" : "Invoice";
+  const isCancelled = invoice.status === "CANCELLED";
+  const docTitle = isCancelled ? "Cancelled" : isQuotation ? "Quotation" : "Invoice";
   const fileName = `${invoice.invoiceNumber || (isQuotation ? "QUOTATION" : "INVOICE")}.pdf`;
 
   return (
@@ -20,12 +21,14 @@ export default function InvoiceDetailModal({ invoice, onClose }) {
           <div className="flex items-center gap-3">
             <span
               className={`rounded px-2.5 py-1 text-xs font-bold uppercase tracking-wider ${
-                isQuotation
+                isCancelled
+                  ? "bg-rose-600 text-white"
+                  : isQuotation
                   ? "bg-amber-600 text-white"
                   : "bg-[#123D2B] text-white"
               }`}
             >
-              {isQuotation ? "Quotation" : "Non-GST Invoice"}
+              {isCancelled ? "Cancelled" : isQuotation ? "Quotation" : "Non-GST Invoice"}
             </span>
             <div>
               <h2 className="text-lg font-bold text-[#1F2937] leading-tight">
@@ -104,7 +107,15 @@ export default function InvoiceDetailModal({ invoice, onClose }) {
               </PDFViewer>
             </div>
           ) : (
-            <div className="rounded-2xl border border-[#E2EAE3] bg-white p-6 shadow-xs max-w-3xl mx-auto space-y-6">
+            <div className="relative rounded-2xl border border-[#E2EAE3] bg-white p-6 shadow-xs max-w-3xl mx-auto space-y-6 overflow-hidden">
+              {isCancelled && (
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center z-10">
+                  <span className="text-6xl font-black text-rose-500/15 tracking-widest uppercase border-4 border-rose-500/20 px-8 py-3 rounded-2xl -rotate-12 select-none">
+                    CANCELLED
+                  </span>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4 text-xs">
                 <div>
                   <span className="font-bold uppercase text-[#64748B]">Billed To:</span>
