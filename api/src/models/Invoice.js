@@ -20,19 +20,8 @@ const invoiceItemSchema = new mongoose.Schema(
 
 const invoiceChargeSchema = new mongoose.Schema(
   {
-    chargeType: {
-      type: String,
-      enum: ["LOADING", "UNLOADING", "TRANSPORT", "LABOUR", "PACKAGING", "VEHICLE", "OTHER"],
-      required: true,
-    },
     name: { type: String, required: true },
-    calculationType: {
-      type: String,
-      enum: ["FIXED", "PER_UNIT", "PER_BAG", "PER_TONNE", "PER_VEHICLE", "PER_DAY", "PER_WORKER", "PERCENTAGE"],
-      default: "FIXED",
-    },
-    quantity: { type: Number, default: 1 },
-    rate: { type: Number, default: 0 },
+    description: { type: String, default: "" },
     amount: { type: Number, required: true },
   },
   { _id: true }
