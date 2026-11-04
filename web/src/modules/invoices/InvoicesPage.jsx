@@ -21,6 +21,7 @@ export default function InvoicesPage() {
     error,
     loadData,
     updateInvoice,
+    convertQuotationToInvoice,
     cancelInvoice,
     deleteInvoice,
   } = useInvoices();
@@ -32,6 +33,20 @@ export default function InvoicesPage() {
       setEditingInvoice(null);
     } else {
       alert("Error updating invoice: " + (res.error || "Unknown error"));
+    }
+  };
+
+  const handleConvertQuotation = async (inv) => {
+    const confirmed = window.confirm(
+      `Convert Quotation ${inv.invoiceNumber} to an official Non-GST Invoice? This will generate a new Invoice number and post the balance of ₹${Number(inv.grandTotal).toLocaleString("en-IN")} to the customer's ledger.`
+    );
+    if (confirmed) {
+      const res = await convertQuotationToInvoice(inv._id || inv.id);
+      if (res.success) {
+        alert("Quotation successfully converted to Invoice!");
+      } else {
+        alert("Failed to convert quotation: " + res.error);
+      }
     }
   };
 
@@ -103,6 +118,7 @@ export default function InvoicesPage() {
           loading={loading}
           onViewInvoice={(invoice) => setSelectedInvoice(invoice)}
           onEditInvoice={(invoice) => setEditingInvoice(invoice)}
+          onConvertQuotation={handleConvertQuotation}
           onCancelInvoice={handleCancel}
           onDeleteInvoice={handleDelete}
         />

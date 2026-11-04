@@ -5,6 +5,7 @@ import {
   updateInvoice,
   cancelInvoice,
   deleteInvoice,
+  convertQuotationToInvoice,
 } from "./invoices.controller.js";
 
 export default async function invoiceRoutes(app) {
@@ -13,6 +14,7 @@ export default async function invoiceRoutes(app) {
   app.post("/invoices", createInvoice);
   app.put("/invoices/:id", updateInvoice);
   app.patch("/invoices/:id", updateInvoice);
+  app.post("/invoices/:id/convert", convertQuotationToInvoice);
   app.post("/invoices/:id/cancel", cancelInvoice);
   app.delete("/invoices/:id", deleteInvoice);
 }

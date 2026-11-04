@@ -24,6 +24,7 @@ const chargeSchema = z.object({
 });
 
 const invoiceCreateSchema = z.object({
+  documentType: z.enum(["INVOICE", "QUOTATION"]).default("INVOICE"),
   branchId: z.string().min(1),
   customerId: z.string().min(1),
   invoiceDate: z.string().optional(),
@@ -39,9 +40,10 @@ export async function listInvoices(request, reply) {
   const orgId = request.headers["x-organization-id"];
   if (!orgId) return reply.code(400).send({ success: false, message: "Organization ID is required" });
 
-  const { branchId, customerId, status, search } = request.query || {};
+  const { branchId, customerId, status, documentType, search } = request.query || {};
   const filter = { organizationId: orgId };
 
+  if (documentType) filter.documentType = documentType;
   if (branchId) filter.branchId = branchId;
   if (customerId) filter.customerId = customerId;
   if (status) filter.status = status;
@@ -80,7 +82,20 @@ export async function createInvoice(request, reply) {
     return reply.code(400).send({ success: false, message: "Validation error", errors: parsed.error.flatten() });
   }
 
-  const { branchId, customerId, invoiceDate, dueDate, items, charges, discountAmount, visibleColumns, notes } = parsed.data;
+  const {
+    documentType = "INVOICE",
+    branchId,
+    customerId,
+    invoiceDate,
+    dueDate,
+    items,
+    charges,
+    discountAmount,
+    visibleColumns,
+    notes,
+  } = parsed.data;
+
+  const isQuotation = documentType === "QUOTATION";
 
   const customer = await Customer.findOne({ _id: customerId, organizationId: orgId });
   if (!customer) return reply.code(404).send({ success: false, message: "Customer not found" });
@@ -89,13 +104,16 @@ export async function createInvoice(request, reply) {
   const financialYear = `${year}-${year + 1}`;
 
   // Atomic sequence numbering
+  const docSeqType = isQuotation ? "QUOTATION" : "INVOICE";
+  const docPrefix = isQuotation ? "QTN" : "INV";
+
   const seq = await DocumentSequence.findOneAndUpdate(
-    { organizationId: orgId, branchId, documentType: "INVOICE", financialYear },
-    { $inc: { nextNumber: 1 }, $setOnInsert: { prefix: "INV" } },
+    { organizationId: orgId, branchId, documentType: docSeqType, financialYear },
+    { $inc: { nextNumber: 1 }, $setOnInsert: { prefix: docPrefix } },
     { upsert: true, new: true }
   );
 
-  const invoiceNumber = `${seq.prefix || "INV"}-${financialYear}-${String(seq.nextNumber).padStart(4, "0")}`;
+  const invoiceNumber = `${seq.prefix || docPrefix}-${financialYear}-${String(seq.nextNumber).padStart(4, "0")}`;
 
   const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
   const chargesTotal = (charges || []).reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
@@ -110,8 +128,9 @@ export async function createInvoice(request, reply) {
     organizationId: orgId,
     branchId,
     customerId,
+    documentType,
     invoiceNumber,
-    status: "ISSUED",
+    status: isQuotation ? "SENT" : "ISSUED",
     invoiceDate: invoiceDate ? new Date(invoiceDate) : new Date(),
     dueDate: dueDate ? new Date(dueDate) : null,
     subtotal,
@@ -119,7 +138,7 @@ export async function createInvoice(request, reply) {
     chargesTotal,
     grandTotal,
     amountPaid: 0,
-    balanceDue: grandTotal,
+    balanceDue: isQuotation ? 0 : grandTotal,
     customerSnapshot: {
       name: customer.name,
       businessName: customer.businessName,
@@ -134,29 +153,33 @@ export async function createInvoice(request, reply) {
       description: c.description || "",
       amount: Number(c.amount) || 0,
     })),
-    issuedAt: new Date(),
+    issuedAt: isQuotation ? null : new Date(),
   });
 
-  // Post debit ledger entry for customer
-  try {
-    await recordLedgerEntry({
-      organizationId: orgId,
-      branchId,
-      customerId,
-      entryType: "INVOICE_DEBIT",
-      debit: grandTotal,
-      credit: 0,
-      referenceType: "INVOICE",
-      referenceId: invoice._id.toString(),
-      description: `Non-GST Invoice issued: ${invoiceNumber}`,
-    });
-  } catch (err) {
-    // Non-blocking
+  // Post debit ledger entry for customer ONLY IF documentType is INVOICE
+  if (!isQuotation) {
+    try {
+      await recordLedgerEntry({
+        organizationId: orgId,
+        branchId,
+        customerId,
+        entryType: "INVOICE_DEBIT",
+        debit: grandTotal,
+        credit: 0,
+        referenceType: "INVOICE",
+        referenceId: invoice._id.toString(),
+        description: `Non-GST Invoice issued: ${invoiceNumber}`,
+      });
+    } catch (err) {
+      // Non-blocking
+    }
   }
 
   return reply.code(201).send({
     success: true,
-    message: `Invoice ${invoiceNumber} created and posted to customer ledger`,
+    message: isQuotation
+      ? `Quotation ${invoiceNumber} created (not posted to customer balance)`
+      : `Invoice ${invoiceNumber} created and posted to customer ledger`,
     data: invoice,
   });
 }
@@ -337,5 +360,60 @@ export async function deleteInvoice(request, reply) {
   return reply.send({
     success: true,
     message: `Invoice ${invoice.invoiceNumber} deleted successfully`,
+  });
+}
+
+export async function convertQuotationToInvoice(request, reply) {
+  const orgId = request.headers["x-organization-id"];
+  if (!orgId) return reply.code(400).send({ success: false, message: "Organization ID is required" });
+
+  const { id } = request.params;
+  const quotation = await Invoice.findOne({ _id: id, organizationId: orgId });
+  if (!quotation) return reply.code(404).send({ success: false, message: "Document not found" });
+
+  if (quotation.documentType !== "QUOTATION") {
+    return reply.code(400).send({ success: false, message: "Document is already an invoice" });
+  }
+
+  const year = new Date().getFullYear();
+  const financialYear = `${year}-${year + 1}`;
+
+  // Generate real INVOICE sequence number
+  const seq = await DocumentSequence.findOneAndUpdate(
+    { organizationId: orgId, branchId: quotation.branchId, documentType: "INVOICE", financialYear },
+    { $inc: { nextNumber: 1 }, $setOnInsert: { prefix: "INV" } },
+    { upsert: true, new: true }
+  );
+
+  const newInvoiceNumber = `${seq.prefix || "INV"}-${financialYear}-${String(seq.nextNumber).padStart(4, "0")}`;
+
+  quotation.documentType = "INVOICE";
+  quotation.invoiceNumber = newInvoiceNumber;
+  quotation.status = "ISSUED";
+  quotation.issuedAt = new Date();
+  quotation.balanceDue = quotation.grandTotal;
+  await quotation.save();
+
+  // Post to customer ledger as official debit invoice
+  try {
+    await recordLedgerEntry({
+      organizationId: orgId,
+      branchId: quotation.branchId?.toString(),
+      customerId: quotation.customerId?.toString(),
+      entryType: "INVOICE_DEBIT",
+      debit: quotation.grandTotal,
+      credit: 0,
+      referenceType: "INVOICE",
+      referenceId: quotation._id.toString(),
+      description: `Converted Quotation to Non-GST Invoice: ${newInvoiceNumber}`,
+    });
+  } catch (err) {
+    // Non-blocking
+  }
+
+  return reply.send({
+    success: true,
+    message: `Quotation successfully converted to Invoice ${newInvoiceNumber} and posted to customer ledger`,
+    data: quotation,
   });
 }

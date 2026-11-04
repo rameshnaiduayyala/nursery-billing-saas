@@ -8,8 +8,14 @@ export default function InvoiceDetailModal({ invoice, onClose }) {
     <div className="rounded-2xl border border-[#E2EAE3] bg-white p-8 shadow-xs max-w-3xl mx-auto space-y-6">
       <div className="flex justify-between items-start border-b border-[#E2EAE3] pb-6">
         <div>
-          <span className="rounded bg-[#123D2B] text-white px-2.5 py-1 text-xs font-bold uppercase tracking-wider">
-            Non-GST Invoice
+          <span
+            className={`rounded px-2.5 py-1 text-xs font-bold uppercase tracking-wider ${
+              invoice.documentType === "QUOTATION"
+                ? "bg-amber-600 text-white"
+                : "bg-[#123D2B] text-white"
+            }`}
+          >
+            {invoice.documentType === "QUOTATION" ? "Plant Quotation" : "Non-GST Invoice"}
           </span>
           <h2 className="mt-3 text-2xl font-extrabold text-[#1F2937]">{invoice.invoiceNumber}</h2>
           <p className="text-xs text-[#64748B]">
@@ -22,7 +28,7 @@ export default function InvoiceDetailModal({ invoice, onClose }) {
             onClick={() => window.print()}
             className="inline-flex items-center gap-1.5 rounded-xl border border-[#E2EAE3] bg-white px-3.5 py-2 text-xs font-semibold text-[#1F2937] hover:bg-[#F5F7F1] cursor-pointer"
           >
-            <Printer size={15} /> Print Invoice
+            <Printer size={15} /> Print {invoice.documentType === "QUOTATION" ? "Quotation" : "Invoice"}
           </button>
           <button
             type="button"

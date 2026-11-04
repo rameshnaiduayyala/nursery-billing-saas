@@ -2,6 +2,7 @@ import React from "react";
 
 export default function InvoiceSummaryFooter({
   isEdit = false,
+  documentType = "INVOICE",
   notes,
   setNotes,
   subtotal,
@@ -92,7 +93,13 @@ export default function InvoiceSummaryFooter({
               disabled={submitting}
               className="rounded-xl bg-[#123D2B] px-6 py-2 text-xs font-bold text-white shadow-xs hover:bg-[#176B45] disabled:opacity-50 transition cursor-pointer"
             >
-              {submitting ? "Saving..." : isEdit ? "Update Invoice" : "Issue Non-GST Invoice"}
+              {submitting
+                ? "Saving..."
+                : isEdit
+                ? `Update ${documentType === "QUOTATION" ? "Quotation" : "Invoice"}`
+                : documentType === "QUOTATION"
+                ? "Create Quotation"
+                : "Issue Non-GST Invoice"}
             </button>
           </div>
         </div>

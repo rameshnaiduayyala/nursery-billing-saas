@@ -74,6 +74,24 @@ export function useInvoices() {
     }
   };
 
+  const convertQuotationToInvoice = async (id) => {
+    try {
+      setSubmitting(true);
+      const res = await apiRequest(`/invoices/${id}/convert`, {
+        method: "POST",
+      });
+      if (res.success || res.data) {
+        await loadData();
+        return { success: true, data: res.data };
+      }
+      return { success: false, error: "Failed to convert quotation" };
+    } catch (err) {
+      return { success: false, error: err.message || "Network error" };
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const cancelInvoice = async (id, reason = "Cancelled by user") => {
     try {
       setSubmitting(true);
@@ -122,6 +140,7 @@ export function useInvoices() {
     loadData,
     createInvoice,
     updateInvoice,
+    convertQuotationToInvoice,
     cancelInvoice,
     deleteInvoice,
   };

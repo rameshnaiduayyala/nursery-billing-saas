@@ -33,6 +33,12 @@ const invoiceSchema = new mongoose.Schema(
     branchId: { type: mongoose.Schema.Types.ObjectId, ref: "Branch", required: true, index: true },
     customerId: { type: mongoose.Schema.Types.ObjectId, ref: "Customer", required: true, index: true },
     quotationId: { type: mongoose.Schema.Types.ObjectId, ref: "Quotation", default: null },
+    documentType: {
+      type: String,
+      enum: ["INVOICE", "QUOTATION"],
+      default: "INVOICE",
+      index: true,
+    },
     invoiceNumber: { type: String, required: true, trim: true },
     status: {
       type: String,

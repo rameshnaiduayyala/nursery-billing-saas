@@ -1,11 +1,12 @@
 import React from "react";
-import { Receipt, Eye, Edit2, Ban, Trash2, Loader2 } from "lucide-react";
+import { Receipt, Eye, Edit2, Ban, Trash2, ArrowRightCircle, Loader2 } from "lucide-react";
 
 export default function InvoiceListTable({
   invoices,
   loading,
   onViewInvoice,
   onEditInvoice,
+  onConvertQuotation,
   onCancelInvoice,
   onDeleteInvoice,
 }) {
@@ -13,7 +14,7 @@ export default function InvoiceListTable({
     return (
       <div className="flex flex-col items-center justify-center p-12 text-[#64748B]">
         <Loader2 size={32} className="animate-spin text-[#176B45] mb-2" />
-        <span className="text-sm">Fetching invoices...</span>
+        <span className="text-sm">Fetching billing records...</span>
       </div>
     );
   }
@@ -22,8 +23,8 @@ export default function InvoiceListTable({
     return (
       <div className="p-12 text-center text-[#64748B]">
         <Receipt size={40} className="mx-auto mb-3 text-[#A8C9A5]" />
-        <h3 className="font-bold text-[#1F2937] text-base">No invoices issued yet</h3>
-        <p className="mt-1 text-xs text-[#64748B]">Click "Create Invoice" to issue your first non-GST bill.</p>
+        <h3 className="font-bold text-[#1F2937] text-base">No billing documents issued yet</h3>
+        <p className="mt-1 text-xs text-[#64748B]">Click "Create Document" to generate your first bill or quotation.</p>
       </div>
     );
   }
@@ -33,7 +34,8 @@ export default function InvoiceListTable({
       <table className="w-full text-left text-sm">
         <thead className="border-b border-[#E2EAE3] bg-[#F5F7F1]/80 text-xs font-semibold uppercase tracking-wider text-[#64748B]">
           <tr>
-            <th className="px-6 py-4">Invoice #</th>
+            <th className="px-6 py-4">Doc #</th>
+            <th className="px-6 py-4">Type</th>
             <th className="px-6 py-4">Customer</th>
             <th className="px-6 py-4">Branch</th>
             <th className="px-6 py-4">Date</th>
@@ -44,12 +46,24 @@ export default function InvoiceListTable({
         </thead>
         <tbody className="divide-y divide-[#E2EAE3]">
           {invoices.map((inv) => {
+            const isQuotation = inv.documentType === "QUOTATION";
             const isCancelled = inv.status === "CANCELLED";
 
             return (
               <tr key={inv._id || inv.id} className="hover:bg-[#F5F7F1]/50 transition">
                 <td className="px-6 py-4 font-mono font-bold text-[#1F2937]">
                   {inv.invoiceNumber}
+                </td>
+                <td className="px-6 py-4">
+                  <span
+                    className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-bold ${
+                      isQuotation
+                        ? "bg-amber-100 text-amber-800 border border-amber-200"
+                        : "bg-[#123D2B]/10 text-[#123D2B] border border-[#123D2B]/20"
+                    }`}
+                  >
+                    {isQuotation ? "QUOTATION" : "INVOICE"}
+                  </span>
                 </td>
                 <td className="px-6 py-4">
                   <div className="font-bold text-[#1F2937]">
@@ -73,6 +87,8 @@ export default function InvoiceListTable({
                     className={`inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-bold ${
                       isCancelled
                         ? "bg-rose-50 text-rose-700 border border-rose-200"
+                        : isQuotation
+                        ? "bg-amber-50 text-amber-700 border border-amber-200"
                         : "bg-[#176B45]/10 border border-[#176B45]/20 text-[#176B45]"
                     }`}
                   >
@@ -81,11 +97,23 @@ export default function InvoiceListTable({
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex items-center justify-end gap-1.5">
+                    {/* Convert Quotation to Invoice Button */}
+                    {isQuotation && !isCancelled && (
+                      <button
+                        type="button"
+                        onClick={() => onConvertQuotation(inv)}
+                        title="Convert to Official Invoice (Posts to Customer Balance)"
+                        className="inline-flex items-center gap-1 rounded-lg border border-[#123D2B] bg-[#123D2B] px-2.5 py-1.5 text-xs font-bold text-white hover:bg-[#176B45] transition cursor-pointer shadow-2xs"
+                      >
+                        <ArrowRightCircle size={13} /> Convert to Invoice
+                      </button>
+                    )}
+
                     {/* View Button */}
                     <button
                       type="button"
                       onClick={() => onViewInvoice(inv)}
-                      title="View Bill"
+                      title="View Bill / Quotation"
                       className="inline-flex items-center gap-1 rounded-lg border border-[#E2EAE3] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#1F2937] hover:bg-[#F5F7F1] transition cursor-pointer"
                     >
                       <Eye size={13} />
@@ -96,7 +124,7 @@ export default function InvoiceListTable({
                       <button
                         type="button"
                         onClick={() => onEditInvoice(inv)}
-                        title="Edit Invoice"
+                        title="Edit Document"
                         className="inline-flex items-center gap-1 rounded-lg border border-[#E2EAE3] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#1F2937] hover:bg-[#F5F7F1] transition cursor-pointer"
                       >
                         <Edit2 size={13} className="text-[#176B45]" />
@@ -108,7 +136,7 @@ export default function InvoiceListTable({
                       <button
                         type="button"
                         onClick={() => onCancelInvoice(inv)}
-                        title="Cancel Invoice"
+                        title="Cancel Document"
                         className="inline-flex items-center gap-1 rounded-lg border border-[#E2EAE3] bg-white px-2.5 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-50 transition cursor-pointer"
                       >
                         <Ban size={13} />
@@ -119,7 +147,7 @@ export default function InvoiceListTable({
                     <button
                       type="button"
                       onClick={() => onDeleteInvoice(inv)}
-                      title="Delete Invoice"
+                      title="Delete Document"
                       className="inline-flex items-center gap-1 rounded-lg border border-[#E2EAE3] bg-white px-2.5 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition cursor-pointer"
                     >
                       <Trash2 size={13} />

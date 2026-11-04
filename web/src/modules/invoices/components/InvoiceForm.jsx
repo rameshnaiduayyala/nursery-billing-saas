@@ -20,6 +20,7 @@ export const DEFAULT_COLUMNS = [
 
 export default function InvoiceForm({
   initialData = null,
+  initialDocumentType = "INVOICE",
   customers,
   branches,
   products,
@@ -27,6 +28,9 @@ export default function InvoiceForm({
   onCancel,
   submitting,
 }) {
+  const [documentType, setDocumentType] = useState(
+    initialData?.documentType || initialDocumentType || "INVOICE"
+  );
   const [selectedCustomerId, setSelectedCustomerId] = useState(
     initialData?.customerId?._id || initialData?.customerId || ""
   );
@@ -240,6 +244,7 @@ export default function InvoiceForm({
     }
 
     onSubmit({
+      documentType,
       customerId: selectedCustomerId,
       branchId: selectedBranchId,
       invoiceDate,
@@ -276,8 +281,42 @@ export default function InvoiceForm({
         {/* Header toolbar & Column Settings (Gear Icon) */}
         <div className="flex flex-col gap-4 border-b border-[#E2EAE3] pb-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-lg font-bold text-[#1F2937]">Generate Non-GST Bill</h2>
-            <p className="text-xs text-[#64748B]">Choose customer, nursery branch, and customize table columns and names.</p>
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-bold text-[#1F2937]">
+                {documentType === "QUOTATION" ? "Generate Plant Quotation" : "Generate Non-GST Bill"}
+              </h2>
+
+              {/* Document Type Switcher (Invoice vs Quotation) */}
+              <div className="inline-flex rounded-xl border border-[#E2EAE3] bg-[#F5F7F1] p-1">
+                <button
+                  type="button"
+                  onClick={() => setDocumentType("INVOICE")}
+                  className={`rounded-lg px-3 py-1 text-xs font-bold transition cursor-pointer ${
+                    documentType === "INVOICE"
+                      ? "bg-[#123D2B] text-white shadow-xs"
+                      : "text-[#64748B] hover:text-[#1F2937]"
+                  }`}
+                >
+                  Invoice
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDocumentType("QUOTATION")}
+                  className={`rounded-lg px-3 py-1 text-xs font-bold transition cursor-pointer ${
+                    documentType === "QUOTATION"
+                      ? "bg-[#123D2B] text-white shadow-xs"
+                      : "text-[#64748B] hover:text-[#1F2937]"
+                  }`}
+                >
+                  Quotation
+                </button>
+              </div>
+            </div>
+            <p className="text-xs text-[#64748B] mt-1">
+              {documentType === "QUOTATION"
+                ? "Quotations do NOT calculate or post amounts to the customer's ledger until converted to an invoice."
+                : "Choose customer, nursery branch, and customize table columns and names."}
+            </p>
           </div>
 
           <div className="relative">
@@ -344,6 +383,7 @@ export default function InvoiceForm({
         {/* Notes, Totals, Discount & Submittal */}
         <InvoiceSummaryFooter
           isEdit={!!initialData}
+          documentType={documentType}
           notes={notes}
           setNotes={setNotes}
           subtotal={subtotal}
