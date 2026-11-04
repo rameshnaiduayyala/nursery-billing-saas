@@ -45,7 +45,6 @@ export async function getHealthDetails(request, reply) {
       customers: "/api/v1/customers",
       ledger: "/api/v1/customers/:id/ledger",
       portal: "/api/v1/portal",
-      quotations: "/api/v1/quotations",
       invoices: "/api/v1/invoices",
       payments: "/api/v1/payments",
       expenses: "/api/v1/expenses",

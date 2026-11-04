@@ -1,11 +1,14 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 import { useInvoices } from "./hooks/useInvoices";
 import InvoiceForm from "./components/InvoiceForm";
 
 export default function CreateInvoicePage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const requestedType = searchParams.get("type") === "quotation" ? "QUOTATION" : "INVOICE";
+
   const {
     customers,
     branches,
@@ -18,9 +21,9 @@ export default function CreateInvoicePage() {
   const handleCreateSubmit = async (payload) => {
     const res = await createInvoice(payload);
     if (res.success) {
-      navigate("/invoices");
+      navigate(payload.documentType === "QUOTATION" ? "/quotations" : "/invoices");
     } else {
-      alert("Error issuing invoice: " + (res.error || "Unknown error"));
+      alert("Error issuing document: " + (res.error || "Unknown error"));
     }
   };
 
@@ -31,23 +34,27 @@ export default function CreateInvoicePage() {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => navigate("/invoices")}
+            onClick={() => navigate(requestedType === "QUOTATION" ? "/quotations" : "/invoices")}
             className="inline-flex items-center justify-center rounded-xl border border-[#E2EAE3] bg-white p-2 text-[#1F2937] hover:bg-[#F5F7F1] transition shadow-xs cursor-pointer"
-            title="Back to Invoices"
+            title="Back to List"
           >
             <ArrowLeft size={18} />
           </button>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-[#1F2937]">Create Non-GST Invoice</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-[#1F2937]">
+              {requestedType === "QUOTATION" ? "Create Plant Quotation" : "Create Non-GST Invoice"}
+            </h1>
             <p className="text-sm text-[#64748B]">
-              Build custom plant bill with dynamic column layout, loading tariffs, and ledger synchronization.
+              {requestedType === "QUOTATION"
+                ? "Prepare quotation with dynamic columns. Does not affect customer ledger until converted."
+                : "Build custom plant bill with dynamic column layout, loading tariffs, and ledger synchronization."}
             </p>
           </div>
         </div>
 
         <button
           type="button"
-          onClick={() => navigate("/invoices")}
+          onClick={() => navigate(requestedType === "QUOTATION" ? "/quotations" : "/invoices")}
           className="inline-flex items-center gap-2 rounded-xl border border-[#E2EAE3] bg-white px-4 py-2.5 text-xs font-semibold text-[#1F2937] hover:bg-[#F5F7F1] transition cursor-pointer"
         >
           Cancel & Return
@@ -61,13 +68,14 @@ export default function CreateInvoicePage() {
         </div>
       )}
 
-      {/* Main Invoice Creation Form */}
+      {/* Main Invoice / Quotation Creation Form */}
       <InvoiceForm
+        initialDocumentType={requestedType}
         customers={customers}
         branches={branches}
         products={products}
         onSubmit={handleCreateSubmit}
-        onCancel={() => navigate("/invoices")}
+        onCancel={() => navigate(requestedType === "QUOTATION" ? "/quotations" : "/invoices")}
         submitting={submitting}
       />
     </div>

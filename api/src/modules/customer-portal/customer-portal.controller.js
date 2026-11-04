@@ -1,4 +1,4 @@
-import { Customer, Quotation, Invoice, Payment, CustomerLedgerEntry } from "../../models/index.js";
+import { Customer, Invoice, Payment, CustomerLedgerEntry } from "../../models/index.js";
 
 async function getCustomerContext(request, reply) {
   const customerId = request.headers["x-customer-id"];
@@ -19,8 +19,8 @@ export async function getPortalOverview(request, reply) {
   if (!customer) return;
 
   const [quotations, invoices, payments, latestLedger] = await Promise.all([
-    Quotation.find({ customerId: customer._id }).sort({ createdAt: -1 }),
-    Invoice.find({ customerId: customer._id }).sort({ invoiceDate: -1 }),
+    Invoice.find({ customerId: customer._id, documentType: "QUOTATION" }).sort({ createdAt: -1 }),
+    Invoice.find({ customerId: customer._id, documentType: "INVOICE" }).sort({ invoiceDate: -1 }),
     Payment.find({ customerId: customer._id }).sort({ paymentDate: -1 }),
     CustomerLedgerEntry.findOne({ customerId: customer._id }).sort({ transactionDate: -1, createdAt: -1 }),
   ]);
@@ -51,7 +51,7 @@ export async function getPortalQuotations(request, reply) {
   const customer = await getCustomerContext(request, reply);
   if (!customer) return;
 
-  const quotations = await Quotation.find({ customerId: customer._id }).sort({ createdAt: -1 });
+  const quotations = await Invoice.find({ customerId: customer._id, documentType: "QUOTATION" }).sort({ createdAt: -1 });
   return reply.send({ success: true, data: quotations });
 }
 
@@ -64,10 +64,10 @@ export async function respondPortalQuotation(request, reply) {
     return reply.code(400).send({ success: false, message: "Action must be ACCEPT or REJECT" });
   }
 
-  const quotation = await Quotation.findOne({ _id: request.params.id, customerId: customer._id });
+  const quotation = await Invoice.findOne({ _id: request.params.id, customerId: customer._id, documentType: "QUOTATION" });
   if (!quotation) return reply.code(404).send({ success: false, message: "Quotation not found" });
 
-  if (quotation.status === "CONVERTED") {
+  if (quotation.status === "CONVERTED" || quotation.documentType === "INVOICE") {
     return reply.code(400).send({ success: false, message: "Quotation has already been converted to an invoice" });
   }
 
@@ -85,7 +85,7 @@ export async function getPortalInvoices(request, reply) {
   const customer = await getCustomerContext(request, reply);
   if (!customer) return;
 
-  const invoices = await Invoice.find({ customerId: customer._id }).sort({ invoiceDate: -1 });
+  const invoices = await Invoice.find({ customerId: customer._id, documentType: "INVOICE" }).sort({ invoiceDate: -1 });
   return reply.send({ success: true, data: invoices });
 }
 

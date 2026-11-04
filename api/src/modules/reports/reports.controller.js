@@ -1,4 +1,4 @@
-import { Invoice, Payment, Quotation, Customer, Expense, Branch } from "../../models/index.js";
+import { Invoice, Payment, Customer, Expense, Branch } from "../../models/index.js";
 
 export async function getOverviewReport(request, reply) {
   const orgId = request.headers["x-organization-id"];
@@ -27,10 +27,10 @@ export async function getOverviewReport(request, reply) {
   }
 
   const [invoices, payments, expenses, quotations, customers] = await Promise.all([
-    Invoice.find(invQuery),
+    Invoice.find({ ...invQuery, documentType: "INVOICE" }),
     Payment.find(payQuery),
     Expense.find(expQuery),
-    Quotation.find({ organizationId: orgId }),
+    Invoice.find({ organizationId: orgId, documentType: "QUOTATION" }),
     Customer.find({ organizationId: orgId }),
   ]);
 

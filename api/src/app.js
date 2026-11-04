@@ -6,7 +6,6 @@ import healthRoutes from "./modules/health/health.routes.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import productRoutes from "./modules/products/products.routes.js";
 import customerRoutes from "./modules/customers/customers.routes.js";
-import quotationRoutes from "./modules/quotations/quotations.routes.js";
 import invoiceRoutes from "./modules/invoices/invoices.routes.js";
 import paymentRoutes from "./modules/payments/payments.routes.js";
 import expenseRoutes from "./modules/expenses/expenses.routes.js";
@@ -45,7 +44,6 @@ export async function buildApp() {
   await app.register(customerRoutes, { prefix: "/api/v1" });
   await app.register(customerLedgerRoutes, { prefix: "/api/v1" });
   await app.register(customerPortalRoutes, { prefix: "/api/v1" });
-  await app.register(quotationRoutes, { prefix: "/api/v1" });
   await app.register(invoiceRoutes, { prefix: "/api/v1" });
   await app.register(paymentRoutes, { prefix: "/api/v1" });
   await app.register(receiptRoutes, { prefix: "/api/v1" });

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Customer, Invoice, Payment, Quotation } from "../../models/index.js";
+import { Customer, Invoice, Payment } from "../../models/index.js";
 
 const customerSchema = z.object({
   customerCode: z.string().optional(),
@@ -94,9 +94,9 @@ export async function getCustomerById(request, reply) {
   if (!customer) return reply.code(404).send({ success: false, message: "Customer not found" });
 
   const [invoices, payments, quotations] = await Promise.all([
-    Invoice.find({ customerId: customer._id, organizationId: orgId }).sort({ createdAt: -1 }).limit(10),
+    Invoice.find({ customerId: customer._id, organizationId: orgId, documentType: "INVOICE" }).sort({ createdAt: -1 }).limit(10),
     Payment.find({ customerId: customer._id, organizationId: orgId }).sort({ createdAt: -1 }).limit(10),
-    Quotation.find({ customerId: customer._id, organizationId: orgId }).sort({ createdAt: -1 }).limit(10),
+    Invoice.find({ customerId: customer._id, organizationId: orgId, documentType: "QUOTATION" }).sort({ createdAt: -1 }).limit(10),
   ]);
 
   const totalInvoiced = invoices.filter((i) => i.status !== "CANCELLED").reduce((s, i) => s + (i.grandTotal || 0), 0);

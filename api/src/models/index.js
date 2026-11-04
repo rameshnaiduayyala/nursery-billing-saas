@@ -6,7 +6,6 @@ export * from "./Permission.js";
 export * from "./Membership.js";
 export * from "./Customer.js";
 export * from "./Product.js";
-export * from "./Quotation.js";
 export * from "./Invoice.js";
 export * from "./Payment.js";
 export * from "./Expense.js";
