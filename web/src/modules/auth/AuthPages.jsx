@@ -6,6 +6,7 @@ import {
   FileSpreadsheet, Calculator, Receipt, UserCheck
 } from "lucide-react";
 import { apiRequest } from "../../lib/api";
+import logoImg from "../../assets/branding/NurseryDeskLogo.png";
 
 const quickLogins = [
   {
@@ -414,19 +415,22 @@ export function RegisterPage() {
 
 function AuthShell({ title, subtitle, children }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#f6f8f6] p-4 py-8">
-      <div className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-8 shadow-sm md:p-10">
-        <div className="mb-6 flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#e8f4eb] text-[#1f6b43]">
-            <Sprout size={26} />
-          </div>
-          <div>
-            <div className="text-xl font-bold tracking-tight text-slate-900">NurseryOS</div>
-            <div className="text-xs text-slate-500">Multi-Business Nursery Management</div>
+    <div className="flex min-h-screen items-center justify-center bg-[#F5F7F1] p-4 py-8">
+      <div className="w-full max-w-lg rounded-3xl border border-[#E2EAE3] bg-white p-8 shadow-sm md:p-10">
+        <div className="mb-6 flex items-center justify-between">
+          <img
+            src={logoImg}
+            alt="NurseryDesk"
+            className="h-12 w-auto max-w-[200px] object-contain"
+          />
+          <div className="text-right">
+            <span className="rounded-md bg-[#A8C9A5]/25 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#123D2B] border border-[#A8C9A5]/40">
+              SaaS Edition
+            </span>
           </div>
         </div>
-        <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
-        <p className="mb-6 mt-1.5 text-sm text-slate-500">{subtitle}</p>
+        <h1 className="text-2xl font-bold text-[#1F2937]">{title}</h1>
+        <p className="mb-6 mt-1.5 text-sm text-[#64748B]">{subtitle}</p>
         {children}
       </div>
     </div>
