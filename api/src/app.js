@@ -24,6 +24,9 @@ export async function buildApp() {
   await registerSecurity(app);
   await app.register(mongoosePlugin);
 
+  // Expose root server and health check at http://localhost:3001/ and /health
+  await app.register(healthRoutes);
+
   // Register API modules under /api/v1
   await app.register(healthRoutes, { prefix: "/api/v1" });
   await app.register(authRoutes, { prefix: "/api/v1" });

@@ -4,21 +4,27 @@ import { env } from "../config/env.js";
 import * as models from "../models/index.js";
 
 async function mongoosePlugin(app) {
-  try {
-    const connection = await mongoose.connect(env.MONGODB_URI);
-    app.log.info("MongoDB connected successfully");
+  app.decorate("mongoose", mongoose);
+  app.decorate("models", models);
 
-    app.decorate("mongoose", connection);
-    app.decorate("models", models);
-
-    app.addHook("onClose", async () => {
-      await mongoose.disconnect();
+  // Connect asynchronously in background with a reasonable server selection timeout
+  mongoose
+    .connect(env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 5000,
+    })
+    .then(() => {
+      app.log.info("MongoDB connected successfully");
+    })
+    .catch((error) => {
+      app.log.error({ err: error.message }, "MongoDB connection failed or deferred");
     });
-  } catch (error) {
-    app.log.error(error, "Failed to connect to MongoDB");
-    throw error;
-  }
+
+  app.addHook("onClose", async () => {
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.disconnect();
+    }
+  });
 }
 
 export default fp(mongoosePlugin, { name: "mongoose" });
-

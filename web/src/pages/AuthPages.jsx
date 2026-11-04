@@ -1,12 +1,346 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import { Sprout, ArrowRight } from "lucide-react";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Sprout, ArrowRight, CheckCircle2, AlertCircle, Building2, User, Mail, Phone, Lock, MapPin, Loader2 } from "lucide-react";
+import { apiRequest } from "../lib/api";
+
 export function LoginPage() {
-  return <AuthShell title="Welcome back" subtitle="Sign in to manage your nursery business."><label className="text-sm font-medium">Email address</label><input className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-3 outline-none focus:border-emerald-600" placeholder="you@nursery.com"/><label className="mt-4 block text-sm font-medium">Password</label><input type="password" className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-3 outline-none focus:border-emerald-600" placeholder="Enter your password"/><button className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-[#1f6b43] py-3 font-semibold text-white">Sign in <ArrowRight size={17}/></button><p className="mt-5 text-center text-sm text-slate-500">New nursery? <Link className="font-semibold text-emerald-700" to="/register">Register your business</Link></p></AuthShell>;
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const res = await apiRequest("/auth/login", {
+        method: "POST",
+        body: JSON.stringify(formData),
+      });
+
+      if (res.success && res.data) {
+        localStorage.setItem("nursery_user", JSON.stringify(res.data.user));
+        if (res.data.workspaces && res.data.workspaces.length > 0) {
+          const defaultWs = res.data.workspaces[0];
+          localStorage.setItem("nursery_current_org", defaultWs.organization._id || defaultWs.organization.id);
+          localStorage.setItem("nursery_current_branch", defaultWs.branchAccess?.[0]?.branchId || "");
+        }
+        navigate("/");
+      }
+    } catch (err) {
+      setError(err.message || "Failed to sign in. Please verify your email and password.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <AuthShell title="Welcome Back" subtitle="Sign in to manage your nursery business and sales.">
+      {error && (
+        <div className="mb-5 flex items-center gap-2 rounded-xl bg-red-50 p-3.5 text-sm text-red-700 border border-red-100">
+          <AlertCircle size={17} className="shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">Business Email Address</label>
+          <div className="relative">
+            <Mail size={17} className="absolute left-3.5 top-3.5 text-slate-400" />
+            <input
+              required
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              className="w-full rounded-xl border border-slate-200 pl-10 pr-3.5 py-3 text-sm focus:border-emerald-600 focus:outline-none"
+              placeholder="you@nursery.com"
+            />
+          </div>
+        </div>
+
+        <div>
+          <div className="flex justify-between items-center mb-1">
+            <label className="block text-xs font-semibold uppercase text-slate-600">Password</label>
+            <a href="#" className="text-xs font-semibold text-emerald-700 hover:underline">
+              Forgot?
+            </a>
+          </div>
+          <div className="relative">
+            <Lock size={17} className="absolute left-3.5 top-3.5 text-slate-400" />
+            <input
+              required
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              className="w-full rounded-xl border border-slate-200 pl-10 pr-3.5 py-3 text-sm focus:border-emerald-600 focus:outline-none"
+              placeholder="Enter your account password"
+            />
+          </div>
+        </div>
+
+        <button
+          disabled={loading}
+          type="submit"
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-[#1b6840] py-3 text-sm font-bold text-white shadow-md hover:bg-[#155433] transition disabled:opacity-60"
+        >
+          {loading ? (
+            <>
+              <Loader2 size={18} className="animate-spin" /> Signing in...
+            </>
+          ) : (
+            <>
+              Sign in to Workspace <ArrowRight size={17} />
+            </>
+          )}
+        </button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-slate-500">
+        New nursery?{" "}
+        <Link className="font-semibold text-emerald-700 hover:underline" to="/register">
+          Register your nursery business
+        </Link>
+      </p>
+    </AuthShell>
+  );
 }
+
 export function RegisterPage() {
-  return <AuthShell title="Register your nursery" subtitle="Create your business account. Our team will review your application."><label className="text-sm font-medium">Nursery business name</label><input className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-3" placeholder="Green Valley Nursery"/><label className="mt-4 block text-sm font-medium">Owner full name</label><input className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-3" placeholder="Your name"/><label className="mt-4 block text-sm font-medium">Business email</label><input className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-3" placeholder="you@nursery.com"/><label className="mt-4 block text-sm font-medium">Mobile number</label><input className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-3" placeholder="+91"/><button className="mt-6 w-full rounded-lg bg-[#1f6b43] py-3 font-semibold text-white">Submit registration</button><p className="mt-5 text-center text-sm text-slate-500">Already registered? <Link className="font-semibold text-emerald-700" to="/login">Sign in</Link></p></AuthShell>;
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [registeredSuccess, setRegisteredSuccess] = useState(false);
+
+  const [formData, setFormData] = useState({
+    businessName: "",
+    ownerName: "",
+    email: "",
+    phone: "",
+    password: "",
+    city: "",
+    state: "",
+    pincode: "",
+  });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const res = await apiRequest("/auth/register", {
+        method: "POST",
+        body: JSON.stringify(formData),
+      });
+
+      if (res.success) {
+        setRegisteredSuccess(true);
+        if (res.data?.organization?.id) {
+          localStorage.setItem("nursery_current_org", res.data.organization.id);
+        }
+      }
+    } catch (err) {
+      setError(err.message || "Failed to complete registration. Please check your details.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <AuthShell
+      title="Register Your Nursery"
+      subtitle="Join India's dedicated Nursery SaaS for managing plant inventory, branches, transport, and billing."
+    >
+      {registeredSuccess ? (
+        <div className="space-y-5 text-center py-4">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+            <CheckCircle2 size={32} />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-slate-900">Registration Complete!</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Your business workspace <strong>{formData.businessName}</strong> and default main branch have been created successfully.
+            </p>
+          </div>
+          <button
+            onClick={() => navigate("/login")}
+            className="w-full rounded-xl bg-[#1b6840] py-3 text-sm font-bold text-white shadow-md hover:bg-[#155433]"
+          >
+            Continue to Sign in
+          </button>
+        </div>
+      ) : (
+        <>
+          {error && (
+            <div className="mb-5 flex items-center gap-2 rounded-xl bg-red-50 p-3.5 text-sm text-red-700 border border-red-100">
+              <AlertCircle size={17} className="shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">
+                Nursery Business / Farm Name
+              </label>
+              <div className="relative">
+                <Building2 size={17} className="absolute left-3.5 top-3.5 text-slate-400" />
+                <input
+                  required
+                  type="text"
+                  value={formData.businessName}
+                  onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 pl-10 pr-3.5 py-2.5 text-sm focus:border-emerald-600 focus:outline-none"
+                  placeholder="e.g. Green Valley Farm & Agro Nursery"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">Owner Name</label>
+                <div className="relative">
+                  <User size={17} className="absolute left-3.5 top-3.5 text-slate-400" />
+                  <input
+                    required
+                    type="text"
+                    value={formData.ownerName}
+                    onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
+                    className="w-full rounded-xl border border-slate-200 pl-10 pr-3.5 py-2.5 text-sm focus:border-emerald-600 focus:outline-none"
+                    placeholder="Full name"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">Mobile Number</label>
+                <div className="relative">
+                  <Phone size={17} className="absolute left-3.5 top-3.5 text-slate-400" />
+                  <input
+                    required
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    className="w-full rounded-xl border border-slate-200 pl-10 pr-3.5 py-2.5 text-sm focus:border-emerald-600 focus:outline-none"
+                    placeholder="+91 98765 43210"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">Email Address</label>
+                <div className="relative">
+                  <Mail size={17} className="absolute left-3.5 top-3.5 text-slate-400" />
+                  <input
+                    required
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full rounded-xl border border-slate-200 pl-10 pr-3.5 py-2.5 text-sm focus:border-emerald-600 focus:outline-none"
+                    placeholder="owner@nursery.com"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">Create Password</label>
+                <div className="relative">
+                  <Lock size={17} className="absolute left-3.5 top-3.5 text-slate-400" />
+                  <input
+                    required
+                    type="password"
+                    minLength={8}
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full rounded-xl border border-slate-200 pl-10 pr-3.5 py-2.5 text-sm focus:border-emerald-600 focus:outline-none"
+                    placeholder="Min 8 characters"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">City / Hub</label>
+                <input
+                  type="text"
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-emerald-600 focus:outline-none"
+                  placeholder="e.g. Kadiyam"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">State</label>
+                <input
+                  type="text"
+                  value={formData.state}
+                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-emerald-600 focus:outline-none"
+                  placeholder="e.g. AP"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">Pincode</label>
+                <input
+                  type="text"
+                  value={formData.pincode}
+                  onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-emerald-600 focus:outline-none"
+                  placeholder="e.g. 533126"
+                />
+              </div>
+            </div>
+
+            <button
+              disabled={loading}
+              type="submit"
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#1b6840] py-3 text-sm font-bold text-white shadow-md hover:bg-[#155433] transition disabled:opacity-60"
+            >
+              {loading ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" /> Registering Nursery...
+                </>
+              ) : (
+                "Submit Nursery Registration"
+              )}
+            </button>
+          </form>
+
+          <p className="mt-5 text-center text-sm text-slate-500">
+            Already registered?{" "}
+            <Link className="font-semibold text-emerald-700 hover:underline" to="/login">
+              Sign in to workspace
+            </Link>
+          </p>
+        </>
+      )}
+    </AuthShell>
+  );
 }
+
 function AuthShell({ title, subtitle, children }) {
-  return <div className="flex min-h-screen items-center justify-center bg-[#f3f7f3] p-4"><div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-sm"><div className="mb-7 flex items-center gap-3"><span className="rounded-xl bg-emerald-50 p-2.5 text-emerald-700"><Sprout size={24}/></span><strong className="text-lg">NurseryOS</strong></div><h1 className="text-2xl font-bold text-slate-900">{title}</h1><p className="mb-7 mt-1 text-sm text-slate-500">{subtitle}</p>{children}</div></div>;
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-[#f6f8f6] p-4 py-8">
+      <div className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-8 shadow-sm md:p-10">
+        <div className="mb-6 flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#e8f4eb] text-[#1f6b43]">
+            <Sprout size={26} />
+          </div>
+          <div>
+            <div className="text-xl font-bold tracking-tight text-slate-900">NurseryOS</div>
+            <div className="text-xs text-slate-500">Multi-Business Nursery Management</div>
+          </div>
+        </div>
+        <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
+        <p className="mb-6 mt-1.5 text-sm text-slate-500">{subtitle}</p>
+        {children}
+      </div>
+    </div>
+  );
 }
