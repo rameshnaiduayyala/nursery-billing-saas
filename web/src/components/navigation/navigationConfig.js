@@ -80,7 +80,6 @@ export const navigationByRole = {
       items: [
         { to: "/quotations", label: "Quotations", icon: FileText },
         { to: "/invoices", label: "Non-GST Invoices", icon: ReceiptText },
-        { to: "/charges", label: "Charges & Tariffs", icon: Sliders },
         { to: "/payments", label: "Payment Collections", icon: Wallet },
         { to: "/expenses", label: "Expenses & Vouchers", icon: Receipt },
       ],
@@ -162,7 +161,6 @@ export const navigationByRole = {
         { to: "/invoices", label: "Issued Invoices", icon: ReceiptText },
         { to: "/payments", label: "Payments & Receipts", icon: Wallet },
         { to: "/expenses", label: "Operational Expenses", icon: Receipt },
-        { to: "/charges", label: "Charges & Tariffs", icon: Sliders },
       ],
     },
     {

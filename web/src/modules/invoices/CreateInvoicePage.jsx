@@ -10,7 +10,6 @@ export default function CreateInvoicePage() {
     customers,
     branches,
     products,
-    chargeTemplates,
     createInvoice,
     submitting,
     error,
@@ -67,7 +66,6 @@ export default function CreateInvoicePage() {
         customers={customers}
         branches={branches}
         products={products}
-        chargeTemplates={chargeTemplates}
         onSubmit={handleCreateSubmit}
         onCancel={() => navigate("/invoices")}
         submitting={submitting}

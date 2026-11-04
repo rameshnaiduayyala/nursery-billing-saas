@@ -10,7 +10,6 @@ import quotationRoutes from "./modules/quotations/quotations.routes.js";
 import invoiceRoutes from "./modules/invoices/invoices.routes.js";
 import paymentRoutes from "./modules/payments/payments.routes.js";
 import expenseRoutes from "./modules/expenses/expenses.routes.js";
-import chargeRoutes from "./modules/charges/charges.routes.js";
 import reportRoutes from "./modules/reports/reports.routes.js";
 import branchRoutes from "./modules/branches/branches.routes.js";
 import employeeRoutes from "./modules/employees/employees.routes.js";
@@ -51,7 +50,6 @@ export async function buildApp() {
   await app.register(paymentRoutes, { prefix: "/api/v1" });
   await app.register(receiptRoutes, { prefix: "/api/v1" });
   await app.register(expenseRoutes, { prefix: "/api/v1" });
-  await app.register(chargeRoutes, { prefix: "/api/v1" });
   await app.register(reportRoutes, { prefix: "/api/v1" });
   await app.register(adminRoutes, { prefix: "/api/v1" });
   await app.register(roleRoutes, { prefix: "/api/v1" });

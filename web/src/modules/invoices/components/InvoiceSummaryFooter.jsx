@@ -5,7 +5,6 @@ export default function InvoiceSummaryFooter({
   notes,
   setNotes,
   subtotal,
-  chargesTotal,
   discount,
   setDiscount,
   grandTotal,
@@ -33,12 +32,6 @@ export default function InvoiceSummaryFooter({
             <span>Plant Subtotal:</span>
             <span className="font-bold text-[#1F2937]">₹{subtotal.toLocaleString("en-IN")}</span>
           </div>
-          {chargesTotal > 0 && (
-            <div className="flex justify-between text-[#64748B] text-xs">
-              <span>Additional Charges:</span>
-              <span className="font-bold text-[#123D2B]">+₹{chargesTotal.toLocaleString("en-IN")}</span>
-            </div>
-          )}
           <div className="flex justify-between items-center text-xs text-[#64748B]">
             <span>Overall Discount:</span>
             <input

@@ -49,7 +49,6 @@ export async function getHealthDetails(request, reply) {
       invoices: "/api/v1/invoices",
       payments: "/api/v1/payments",
       expenses: "/api/v1/expenses",
-      charges: "/api/v1/charges",
       reports: "/api/v1/reports",
       admin: "/api/v1/admin",
     },

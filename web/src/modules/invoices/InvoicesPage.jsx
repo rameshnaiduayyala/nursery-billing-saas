@@ -16,7 +16,6 @@ export default function InvoicesPage() {
     customers,
     branches,
     products,
-    chargeTemplates,
     loading,
     submitting,
     error,
@@ -136,7 +135,6 @@ export default function InvoicesPage() {
               customers={customers}
               branches={branches}
               products={products}
-              chargeTemplates={chargeTemplates}
               onSubmit={handleEditSubmit}
               onCancel={() => setEditingInvoice(null)}
               submitting={submitting}

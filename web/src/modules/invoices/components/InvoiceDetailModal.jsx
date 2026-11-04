@@ -82,19 +82,6 @@ export default function InvoiceDetailModal({ invoice, onClose }) {
         </table>
       </div>
 
-      {/* Charges */}
-      {invoice.charges?.length > 0 && (
-        <div className="rounded-xl border border-[#E2EAE3] p-3 text-xs space-y-1">
-          <div className="font-bold text-[#1F2937] uppercase text-[11px] mb-1">Additional Charges:</div>
-          {invoice.charges.map((ch, idx) => (
-            <div key={idx} className="flex justify-between text-[#64748B]">
-              <span>{ch.name}:</span>
-              <span className="font-bold text-[#123D2B]">+₹{Number(ch.amount).toLocaleString("en-IN")}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
       {invoice.discountAmount > 0 && (
         <div className="flex justify-between text-xs text-rose-600 font-semibold px-2">
           <span>Overall Discount:</span>

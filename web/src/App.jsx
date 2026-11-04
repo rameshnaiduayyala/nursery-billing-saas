@@ -17,7 +17,6 @@ import SettingsPage from "./modules/settings/SettingsPage";
 import AdminOrganizationsPage from "./modules/admin/AdminOrganizationsPage";
 import EmployeesPage from "./modules/employees/EmployeesPage";
 import RolesPage from "./modules/roles/RolesPage";
-import ChargesPage from "./modules/charges/ChargesPage";
 import ReportsPage from "./modules/reports/ReportsPage";
 import NotificationsPage from "./modules/notifications/NotificationsPage";
 import FilesPage from "./modules/files/FilesPage";
@@ -54,7 +53,6 @@ export default function App() {
           <Route path="/quotations" element={<QuotationsPage />} />
           <Route path="/invoices" element={<InvoicesPage />} />
           <Route path="/invoices/create" element={<CreateInvoicePage />} />
-          <Route path="/charges" element={<ChargesPage />} />
           <Route path="/payments" element={<PaymentsPage />} />
           <Route path="/expenses" element={<ExpensesPage />} />
           <Route path="/reports" element={<ReportsPage />} />

@@ -12,22 +12,12 @@ const itemSchema = z.object({
   sortOrder: z.number().default(0),
 });
 
-const chargeSchema = z.object({
-  chargeType: z.enum(["LOADING", "UNLOADING", "TRANSPORT", "LABOUR", "PACKAGING", "VEHICLE", "OTHER"]),
-  name: z.string().min(1),
-  calculationType: z.enum(["FIXED", "PER_UNIT", "PER_BAG", "PER_TONNE", "PER_VEHICLE", "PER_DAY", "PER_WORKER", "PERCENTAGE"]).default("FIXED"),
-  quantity: z.number().default(1),
-  rate: z.number().default(0),
-  amount: z.number().nonnegative(),
-});
-
 const quotationCreateSchema = z.object({
   branchId: z.string().min(1),
   customerId: z.string().min(1),
   quotationDate: z.string().optional(),
   validUntil: z.string().optional().nullable(),
   items: z.array(itemSchema).min(1),
-  charges: z.array(chargeSchema).default([]),
   discountAmount: z.number().default(0),
   notes: z.string().optional().nullable(),
   termsText: z.string().optional().nullable(),
@@ -54,11 +44,10 @@ export async function createQuotation(request, reply) {
     return reply.code(400).send({ success: false, message: "Validation error", errors: parsed.error.flatten() });
   }
 
-  const { branchId, customerId, items, charges, discountAmount, notes, termsText, validUntil } = parsed.data;
+  const { branchId, customerId, items, discountAmount, notes, termsText, validUntil } = parsed.data;
 
   const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
-  const chargesTotal = charges.reduce((sum, ch) => sum + ch.amount, 0);
-  const grandTotal = Math.max(0, subtotal - discountAmount + chargesTotal);
+  const grandTotal = Math.max(0, subtotal - discountAmount);
 
   const financialYear = "2026-27";
   const seq = await DocumentSequence.findOneAndUpdate(
@@ -76,10 +65,10 @@ export async function createQuotation(request, reply) {
     status: "SENT",
     subtotal,
     discountAmount,
-    chargesTotal,
+    chargesTotal: 0,
     grandTotal,
     items,
-    charges,
+    charges: [],
     notes,
     termsText,
     validUntil: validUntil ? new Date(validUntil) : null,

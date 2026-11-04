@@ -6,7 +6,6 @@ export function useInvoices() {
   const [customers, setCustomers] = useState([]);
   const [branches, setBranches] = useState([]);
   const [products, setProducts] = useState([]);
-  const [chargeTemplates, setChargeTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -15,19 +14,17 @@ export function useInvoices() {
     try {
       setLoading(true);
       setError("");
-      const [invRes, custRes, brRes, prodRes, chgRes] = await Promise.all([
+      const [invRes, custRes, brRes, prodRes] = await Promise.all([
         apiRequest("/invoices").catch(() => ({ data: [] })),
         apiRequest("/customers").catch(() => ({ data: [] })),
         apiRequest("/branches").catch(() => ({ data: [] })),
         apiRequest("/products").catch(() => ({ data: [] })),
-        apiRequest("/charges/templates").catch(() => ({ data: [] })),
       ]);
 
       if (invRes.data) setInvoices(invRes.data);
       if (custRes.data) setCustomers(custRes.data);
       if (brRes.data) setBranches(brRes.data);
       if (prodRes.data) setProducts(prodRes.data);
-      if (chgRes.data) setChargeTemplates(chgRes.data);
     } catch (err) {
       setError(err.message || "Failed to load invoices");
     } finally {
@@ -119,7 +116,6 @@ export function useInvoices() {
     customers,
     branches,
     products,
-    chargeTemplates,
     loading,
     submitting,
     error,
