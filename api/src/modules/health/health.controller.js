@@ -21,7 +21,6 @@ export async function getHealthDetails(request, reply) {
       engine: "MongoDB",
       status: mongoStatusMap[mongoState] || "Unknown",
       connected: mongoState === 1,
-      host: mongoose.connection.host || null,
       name: mongoose.connection.name || null,
     },
     server: {
