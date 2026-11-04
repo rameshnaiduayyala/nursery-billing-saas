@@ -3,6 +3,7 @@ import { Settings } from "lucide-react";
 import ColumnSettingsModal from "./ColumnSettingsModal";
 import InvoiceMetaFields from "./InvoiceMetaFields";
 import InvoiceItemsTable from "./InvoiceItemsTable";
+import AdditionalChargesSection from "./AdditionalChargesSection";
 import InvoiceSummaryFooter from "./InvoiceSummaryFooter";
 
 export const DEFAULT_COLUMNS = [
@@ -97,6 +98,16 @@ export default function InvoiceForm({
         ]
   );
 
+  const [charges, setCharges] = useState(
+    initialData?.charges && initialData.charges.length > 0
+      ? initialData.charges.map((ch) => ({
+          name: ch.name || "",
+          description: ch.description || "",
+          amount: Number(ch.amount) || 0,
+        }))
+      : []
+  );
+
   useEffect(() => {
     if (customers && customers.length > 0 && !selectedCustomerId) {
       setSelectedCustomerId(customers[0]._id || customers[0].id);
@@ -159,7 +170,8 @@ export default function InvoiceForm({
 
   // Calculations
   const subtotal = items.reduce((sum, item) => sum + (Number(item.lineTotal) || 0), 0);
-  const grandTotal = Math.max(0, subtotal - Number(discount || 0));
+  const chargesTotal = charges.reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+  const grandTotal = Math.max(0, subtotal - Number(discount || 0) + chargesTotal);
 
   const handleItemChange = (index, field, value) => {
     const updated = [...items];
@@ -200,6 +212,27 @@ export default function InvoiceForm({
     setItems(items.filter((_, i) => i !== index));
   };
 
+  const addCharge = () => {
+    setCharges([
+      ...charges,
+      {
+        name: "",
+        description: "",
+        amount: 0,
+      },
+    ]);
+  };
+
+  const handleChargeChange = (index, field, value) => {
+    const updated = [...charges];
+    updated[index][field] = value;
+    setCharges(updated);
+  };
+
+  const removeCharge = (index) => {
+    setCharges(charges.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!selectedCustomerId) {
@@ -229,6 +262,13 @@ export default function InvoiceForm({
         discountAmount: Number(it.discountAmount) || 0,
         lineTotal: Number(it.lineTotal) || 0,
       })),
+      charges: charges
+        .filter((c) => c.name && c.name.trim() !== "")
+        .map((c) => ({
+          name: c.name.trim(),
+          description: c.description || "",
+          amount: Number(c.amount) || 0,
+        })),
       discountAmount: Number(discount) || 0,
       visibleColumns,
       customColumnLabels: columnsConfig.reduce((acc, c) => {
@@ -302,12 +342,21 @@ export default function InvoiceForm({
           onRemoveItem={removeItem}
         />
 
+        {/* Additional Charges (Charge Name, Description, Amount) */}
+        <AdditionalChargesSection
+          charges={charges}
+          onAddCharge={addCharge}
+          onChargeChange={handleChargeChange}
+          onRemoveCharge={removeCharge}
+        />
+
         {/* Notes, Totals, Discount & Submittal */}
         <InvoiceSummaryFooter
           isEdit={!!initialData}
           notes={notes}
           setNotes={setNotes}
           subtotal={subtotal}
+          chargesTotal={chargesTotal}
           discount={discount}
           setDiscount={setDiscount}
           grandTotal={grandTotal}

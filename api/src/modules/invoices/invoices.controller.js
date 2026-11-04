@@ -17,12 +17,19 @@ const itemSchema = z.object({
   sortOrder: z.number().default(0),
 });
 
+const chargeSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional().default(""),
+  amount: z.number().nonnegative(),
+});
+
 const invoiceCreateSchema = z.object({
   branchId: z.string().min(1),
   customerId: z.string().min(1),
   invoiceDate: z.string().optional(),
   dueDate: z.string().optional().nullable(),
   items: z.array(itemSchema).min(1),
+  charges: z.array(chargeSchema).default([]),
   discountAmount: z.number().default(0),
   visibleColumns: z.array(z.string()).optional(),
   notes: z.string().optional().nullable(),
@@ -73,7 +80,7 @@ export async function createInvoice(request, reply) {
     return reply.code(400).send({ success: false, message: "Validation error", errors: parsed.error.flatten() });
   }
 
-  const { branchId, customerId, invoiceDate, dueDate, items, discountAmount, visibleColumns, notes } = parsed.data;
+  const { branchId, customerId, invoiceDate, dueDate, items, charges, discountAmount, visibleColumns, notes } = parsed.data;
 
   const customer = await Customer.findOne({ _id: customerId, organizationId: orgId });
   if (!customer) return reply.code(404).send({ success: false, message: "Customer not found" });
@@ -91,7 +98,8 @@ export async function createInvoice(request, reply) {
   const invoiceNumber = `${seq.prefix || "INV"}-${financialYear}-${String(seq.nextNumber).padStart(4, "0")}`;
 
   const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
-  const grandTotal = Math.max(0, subtotal - discountAmount);
+  const chargesTotal = (charges || []).reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+  const grandTotal = Math.max(0, subtotal - discountAmount + chargesTotal);
 
   const sanitizedItems = items.map((it) => ({
     ...it,
@@ -108,7 +116,7 @@ export async function createInvoice(request, reply) {
     dueDate: dueDate ? new Date(dueDate) : null,
     subtotal,
     discountAmount,
-    chargesTotal: 0,
+    chargesTotal,
     grandTotal,
     amountPaid: 0,
     balanceDue: grandTotal,
@@ -121,7 +129,11 @@ export async function createInvoice(request, reply) {
     visibleColumns: visibleColumns || ["plantName", "plantSize", "quantity", "unitPrice", "lineTotal"],
     notes,
     items: sanitizedItems,
-    charges: [],
+    charges: (charges || []).map((c) => ({
+      name: c.name,
+      description: c.description || "",
+      amount: Number(c.amount) || 0,
+    })),
     issuedAt: new Date(),
   });
 
@@ -213,6 +225,7 @@ export async function updateInvoice(request, reply) {
     invoiceDate,
     dueDate,
     items,
+    charges,
     discountAmount,
     visibleColumns,
     notes,
@@ -247,11 +260,20 @@ export async function updateInvoice(request, reply) {
     invoice.subtotal = items.reduce((sum, item) => sum + (Number(item.lineTotal) || 0), 0);
   }
 
+  if (charges !== undefined) {
+    invoice.charges = charges.map((c) => ({
+      name: c.name,
+      description: c.description || "",
+      amount: Number(c.amount) || 0,
+    }));
+    invoice.chargesTotal = invoice.charges.reduce((sum, ch) => sum + ch.amount, 0);
+  }
+
   if (discountAmount !== undefined) {
     invoice.discountAmount = Number(discountAmount) || 0;
   }
 
-  invoice.grandTotal = Math.max(0, invoice.subtotal - invoice.discountAmount);
+  invoice.grandTotal = Math.max(0, invoice.subtotal - invoice.discountAmount + (invoice.chargesTotal || 0));
   invoice.balanceDue = Math.max(0, invoice.grandTotal - (invoice.amountPaid || 0));
 
   await invoice.save();
