@@ -10,6 +10,9 @@ import invoiceRoutes from "./modules/invoices/invoices.routes.js";
 import paymentRoutes from "./modules/payments/payments.routes.js";
 import reportRoutes from "./modules/reports/reports.routes.js";
 import branchRoutes from "./modules/branches/branches.routes.js";
+import expenseRoutes from "./modules/expenses/expenses.routes.js";
+import chargeRoutes from "./modules/charges/charges.routes.js";
+import adminRoutes from "./modules/admin/admin.routes.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -30,7 +33,10 @@ export async function buildApp() {
   await app.register(quotationRoutes, { prefix: "/api/v1" });
   await app.register(invoiceRoutes, { prefix: "/api/v1" });
   await app.register(paymentRoutes, { prefix: "/api/v1" });
+  await app.register(expenseRoutes, { prefix: "/api/v1" });
+  await app.register(chargeRoutes, { prefix: "/api/v1" });
   await app.register(reportRoutes, { prefix: "/api/v1" });
+  await app.register(adminRoutes, { prefix: "/api/v1" });
 
   app.setErrorHandler((error, request, reply) => {
     request.log.error(error);

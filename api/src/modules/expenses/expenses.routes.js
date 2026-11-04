@@ -42,3 +42,4 @@ export default async function expenseRoutes(app) {
     return reply.code(201).send({ success: true, data: expense });
   });
 }
+

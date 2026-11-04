@@ -35,3 +35,4 @@ export default async function chargeRoutes(app) {
     return reply.code(201).send({ success: true, data: template });
   });
 }
+
