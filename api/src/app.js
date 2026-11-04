@@ -1,4 +1,5 @@
 import Fastify from "fastify";
+import mongoose from "mongoose";
 import mongoosePlugin from "./plugins/mongoose.plugin.js";
 import { registerSecurity } from "./plugins/security.plugin.js";
 import healthRoutes from "./modules/health/health.routes.js";
@@ -61,10 +62,28 @@ export async function buildApp() {
 
   app.setErrorHandler((error, request, reply) => {
     request.log.error(error);
+
+    const errorMessage = error.message || "";
+    // Detect MongoDB connection / IP Whitelist / SSL errors
+    if (
+      errorMessage.includes("SSL alert number 80") ||
+      errorMessage.includes("tlsv1 alert internal error") ||
+      errorMessage.includes("Could not connect to any servers in your MongoDB Atlas cluster") ||
+      errorMessage.includes("buffering timed out") ||
+      error.name === "MongooseServerSelectionError"
+    ) {
+      return reply.code(503).send({
+        success: false,
+        code: "DATABASE_UNAVAILABLE",
+        message:
+          "Database connection error: MongoDB Atlas cluster refused the SSL connection. Please ensure your current IP address is whitelisted in MongoDB Atlas (Network Access -> Add IP Address: 0.0.0.0/0 or Current IP).",
+      });
+    }
+
     const statusCode = error.statusCode && error.statusCode < 500 ? error.statusCode : 500;
     reply.code(statusCode).send({
       success: false,
-      message: statusCode === 500 ? "Internal server error" : error.message,
+      message: statusCode === 500 ? error.message : error.message,
     });
   });
 

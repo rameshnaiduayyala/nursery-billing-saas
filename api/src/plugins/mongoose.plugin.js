@@ -7,18 +7,17 @@ async function mongoosePlugin(app) {
   app.decorate("mongoose", mongoose);
   app.decorate("models", models);
 
-  // Connect asynchronously in background with a reasonable server selection timeout
-  mongoose
-    .connect(env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000,
-      connectTimeoutMS: 5000,
-    })
-    .then(() => {
-      app.log.info("MongoDB connected successfully");
-    })
-    .catch((error) => {
-      app.log.error({ err: error.message }, "MongoDB connection failed or deferred");
+  try {
+    app.log.info("Connecting to MongoDB...");
+    await mongoose.connect(env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 10000,
+      connectTimeoutMS: 10000,
     });
+    app.log.info("MongoDB connected successfully");
+  } catch (error) {
+    app.log.error({ err: error.message }, "MongoDB initial connection failed");
+    // Do not crash, but log clearly
+  }
 
   app.addHook("onClose", async () => {
     if (mongoose.connection.readyState !== 0) {
