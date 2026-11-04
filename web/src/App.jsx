@@ -10,6 +10,7 @@ import CustomersPage from "./modules/customers/CustomersPage";
 import ProductsPage from "./modules/products/ProductsPage";
 import QuotationsPage from "./modules/quotations/QuotationsPage";
 import InvoicesPage from "./modules/invoices/InvoicesPage";
+import CreateInvoicePage from "./modules/invoices/CreateInvoicePage";
 import PaymentsPage from "./modules/payments/PaymentsPage";
 import ExpensesPage from "./modules/expenses/ExpensesPage";
 import SettingsPage from "./modules/settings/SettingsPage";
@@ -52,6 +53,7 @@ export default function App() {
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/quotations" element={<QuotationsPage />} />
           <Route path="/invoices" element={<InvoicesPage />} />
+          <Route path="/invoices/create" element={<CreateInvoicePage />} />
           <Route path="/charges" element={<ChargesPage />} />
           <Route path="/payments" element={<PaymentsPage />} />
           <Route path="/expenses" element={<ExpensesPage />} />

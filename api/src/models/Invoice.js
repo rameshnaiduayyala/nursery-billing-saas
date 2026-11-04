@@ -3,12 +3,16 @@ import mongoose from "mongoose";
 const invoiceItemSchema = new mongoose.Schema(
   {
     productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product", default: null },
+    plantName: { type: String, default: null },
+    plantSize: { type: String, default: null },
+    variety: { type: String, default: null },
     description: { type: String, required: true },
     quantity: { type: Number, required: true },
-    unitName: { type: String, required: true },
+    unitName: { type: String, default: "PCS" },
     unitPrice: { type: Number, required: true },
     discountAmount: { type: Number, default: 0 },
     lineTotal: { type: Number, required: true },
+    customFields: { type: mongoose.Schema.Types.Mixed, default: {} },
     sortOrder: { type: Number, default: 0 },
   },
   { _id: true }
@@ -59,6 +63,7 @@ const invoiceSchema = new mongoose.Schema(
     balanceDue: { type: Number, required: true },
     customerSnapshot: { type: mongoose.Schema.Types.Mixed, default: null },
     branchSnapshot: { type: mongoose.Schema.Types.Mixed, default: null },
+    visibleColumns: [{ type: String }],
     notes: { type: String, default: null },
     issuedAt: { type: Date, default: null },
     cancelledAt: { type: Date, default: null },
@@ -73,4 +78,3 @@ invoiceSchema.index({ organizationId: 1, customerId: 1, status: 1 });
 invoiceSchema.index({ branchId: 1, invoiceDate: -1 });
 
 export const Invoice = mongoose.model("Invoice", invoiceSchema);
-
