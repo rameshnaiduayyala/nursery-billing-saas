@@ -5,238 +5,301 @@ import {
   Text,
   View,
   StyleSheet,
-  Font,
 } from "@react-pdf/renderer";
 
-// Styles for professional nursery invoice PDF
+const C = {
+  forest: "#123D2B",
+  green: "#176B45",
+  emerald: "#278457",
+  ink: "#17251E",
+  body: "#42534A",
+  muted: "#718078",
+  line: "#DCE7DF",
+  soft: "#F4F8F3",
+  softGreen: "#EAF3EA",
+  white: "#FFFFFF",
+};
+
 const styles = StyleSheet.create({
   page: {
-    padding: 36,
-    fontSize: 9,
+    paddingTop: 34,
+    paddingBottom: 58,
+    paddingHorizontal: 38,
     fontFamily: "Helvetica",
-    color: "#1F2937",
-    backgroundColor: "#FFFFFF",
+    fontSize: 9,
+    color: C.ink,
+    backgroundColor: C.white,
     lineHeight: 1.4,
   },
-  headerContainer: {
+  header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    borderBottomWidth: 1.5,
-    borderBottomColor: "#123D2B",
     paddingBottom: 16,
     marginBottom: 18,
+    borderBottomWidth: 2,
+    borderBottomColor: C.forest,
   },
+  brandBlock: { width: "57%" },
   brandTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#123D2B",
+    fontFamily: "Times-Bold",
+    fontSize: 24,
+    color: C.forest,
+    letterSpacing: 0.8,
     textTransform: "uppercase",
+  },
+  tagline: {
+    fontFamily: "Times-Italic",
+    marginTop: 4,
+    fontSize: 8.5,
+    color: C.green,
     letterSpacing: 0.5,
   },
-  brandSubtitle: {
+  businessMeta: {
+    marginTop: 8,
     fontSize: 8,
-    color: "#64748B",
-    marginTop: 2,
+    color: C.body,
+    lineHeight: 1.55,
   },
+  documentBlock: { width: "39%", alignItems: "flex-end" },
   docBadge: {
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    backgroundColor: "#123D2B",
+    backgroundColor: C.forest,
+    paddingVertical: 6,
+    paddingHorizontal: 11,
     borderRadius: 4,
-    alignSelf: "flex-end",
   },
   docBadgeText: {
-    color: "#FFFFFF",
-    fontSize: 9,
+    color: C.white,
+    fontSize: 8,
     fontWeight: "bold",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+    letterSpacing: 0.65,
   },
   docNumber: {
-    fontSize: 13,
+    marginTop: 9,
+    fontSize: 14,
     fontWeight: "bold",
-    color: "#1F2937",
-    marginTop: 5,
+    color: C.forest,
     textAlign: "right",
   },
   docMeta: {
+    marginTop: 3,
     fontSize: 8,
-    color: "#64748B",
-    marginTop: 2,
+    color: C.muted,
     textAlign: "right",
+  },
+  sectionHeading: {
+    fontSize: 8,
+    fontWeight: "bold",
+    color: C.green,
+    letterSpacing: 0.7,
+    marginBottom: 8,
+    textTransform: "uppercase",
   },
   partyGrid: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 18,
-    backgroundColor: "#F5F7F1",
-    padding: 12,
-    borderRadius: 6,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: C.line,
+    borderRadius: 7,
+    backgroundColor: C.soft,
+    padding: 13,
   },
-  partyCol: {
-    width: "48%",
-  },
-  partyLabel: {
-    fontSize: 8,
-    fontWeight: "bold",
-    color: "#123D2B",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: 4,
+  partyCol: { width: "50%", paddingRight: 12 },
+  partyColRight: {
+    width: "50%",
+    paddingLeft: 14,
+    borderLeftWidth: 1,
+    borderLeftColor: C.line,
   },
   partyName: {
     fontSize: 10,
     fontWeight: "bold",
-    color: "#1F2937",
-    marginBottom: 2,
+    color: C.ink,
+    marginBottom: 4,
   },
   partyDetail: {
-    fontSize: 8.5,
-    color: "#475569",
-    marginBottom: 1.5,
+    fontSize: 8,
+    color: C.body,
+    marginTop: 2,
+    lineHeight: 1.45,
+  },
+  tableSectionTitle: {
+    fontSize: 9,
+    fontWeight: "bold",
+    color: C.forest,
+    marginBottom: 8,
   },
   table: {
-    marginTop: 10,
     borderWidth: 1,
-    borderColor: "#E2EAE3",
-    borderRadius: 4,
+    borderColor: C.line,
+    borderRadius: 6,
     overflow: "hidden",
   },
   tableHeader: {
     flexDirection: "row",
-    backgroundColor: "#123D2B",
-    paddingVertical: 7,
+    alignItems: "center",
+    backgroundColor: C.forest,
+    paddingVertical: 9,
     paddingHorizontal: 8,
-    color: "#FFFFFF",
-    fontSize: 8,
+  },
+  headerText: {
+    color: C.white,
+    fontSize: 7.2,
     fontWeight: "bold",
-    textTransform: "uppercase",
+    letterSpacing: 0.25,
   },
   tableRow: {
     flexDirection: "row",
-    paddingVertical: 6,
+    alignItems: "center",
+    minHeight: 37,
+    paddingVertical: 8,
     paddingHorizontal: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E2EAE3",
-    fontSize: 8.5,
+    borderBottomWidth: 0.7,
+    borderBottomColor: C.line,
   },
-  colNo: { width: "6%", textAlign: "center", color: "#64748B" },
-  colItem: { width: "44%" },
-  colVariety: { width: "16%" },
-  colQty: { width: "10%", textAlign: "center" },
-  colRate: { width: "12%", textAlign: "right" },
-  colAmount: { width: "12%", textAlign: "right", fontWeight: "bold" },
-
-  itemTitle: {
-    fontWeight: "bold",
-    color: "#1F2937",
-  },
-  itemSub: {
-    fontSize: 7.5,
-    color: "#64748B",
-    marginTop: 1,
-  },
-
+  tableRowAlt: { backgroundColor: "#FAFCFA" },
+  colNo: { width: "5%", textAlign: "center", color: C.muted },
+  colItem: { width: "34%", paddingRight: 5 },
+  colVariety: { width: "19%", paddingRight: 4 },
+  colQty: { width: "12%", textAlign: "center" },
+  colRate: { width: "14%", textAlign: "right" },
+  colAmount: { width: "16%", textAlign: "right", fontWeight: "bold", color: C.forest },
+  itemTitle: { fontSize: 8.5, fontWeight: "bold", color: C.ink },
+  itemSub: { fontSize: 7.2, color: C.muted, marginTop: 2 },
+  cellText: { fontSize: 8, color: C.body },
   chargesSection: {
-    marginTop: 12,
-    padding: 10,
-    backgroundColor: "#FAFBF8",
+    marginTop: 15,
+    padding: 12,
     borderWidth: 1,
-    borderColor: "#E2EAE3",
-    borderRadius: 4,
+    borderColor: C.line,
+    borderRadius: 6,
+    backgroundColor: "#FBFCFA",
   },
   chargesHeader: {
     fontSize: 8,
     fontWeight: "bold",
-    color: "#123D2B",
+    color: C.forest,
+    letterSpacing: 0.5,
+    marginBottom: 8,
     textTransform: "uppercase",
-    marginBottom: 4,
   },
   chargeRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    fontSize: 8,
-    color: "#475569",
-    marginBottom: 2,
+    paddingVertical: 5,
+    borderBottomWidth: 0.6,
+    borderBottomColor: C.line,
   },
-
-  totalsContainer: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    marginTop: 14,
-  },
-  totalsBox: {
-    width: "48%",
-    backgroundColor: "#F5F7F1",
-    padding: 10,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: "#E2EAE3",
-  },
-  totalLine: {
+  chargeName: { fontSize: 8, color: C.body, width: "75%" },
+  chargeAmount: { fontSize: 8, color: C.forest, fontWeight: "bold" },
+  bottomGrid: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 4,
-    fontSize: 8.5,
-    color: "#475569",
-  },
-  grandTotalLine: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    borderTopWidth: 1.5,
-    borderTopColor: "#123D2B",
-    paddingTop: 5,
-    marginTop: 5,
-  },
-  grandTotalText: {
-    fontSize: 11,
-    fontWeight: "bold",
-    color: "#123D2B",
+    alignItems: "flex-start",
+    marginTop: 16,
   },
   notesBox: {
-    marginTop: 18,
-    padding: 10,
+    width: "48%",
+    padding: 11,
     borderWidth: 1,
-    borderColor: "#E2EAE3",
-    borderRadius: 4,
+    borderColor: C.line,
+    borderRadius: 6,
+    backgroundColor: C.white,
   },
   notesTitle: {
     fontSize: 8,
     fontWeight: "bold",
-    color: "#64748B",
+    color: C.green,
+    letterSpacing: 0.5,
+    marginBottom: 6,
     textTransform: "uppercase",
-    marginBottom: 3,
   },
-  notesContent: {
-    fontSize: 8,
-    color: "#475569",
+  notesContent: { fontSize: 8, color: C.body, lineHeight: 1.55 },
+  totalsBox: {
+    width: "46%",
+    padding: 12,
+    borderWidth: 1,
+    borderColor: C.line,
+    borderRadius: 7,
+    backgroundColor: C.soft,
   },
+  totalLine: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 7,
+    fontSize: 8.5,
+    color: C.body,
+  },
+  totalValue: { fontSize: 8.5, color: C.ink, fontWeight: "bold" },
+  grandTotalLine: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 5,
+    paddingTop: 9,
+    borderTopWidth: 1.3,
+    borderTopColor: C.green,
+  },
+  grandTotalLabel: { fontSize: 10, fontWeight: "bold", color: C.forest },
+  grandTotalValue: { fontSize: 13, fontWeight: "bold", color: C.forest },
+  signatureRow: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginTop: 28,
+  },
+  signatureBlock: {
+    width: 155,
+    borderTopWidth: 0.8,
+    borderTopColor: C.muted,
+    paddingTop: 5,
+    alignItems: "center",
+  },
+  signatureText: { fontSize: 7.5, color: C.muted },
   footer: {
     position: "absolute",
-    bottom: 24,
-    left: 36,
-    right: 36,
+    bottom: 25,
+    left: 38,
+    right: 38,
     borderTopWidth: 1,
-    borderTopColor: "#E2EAE3",
+    borderTopColor: C.line,
     paddingTop: 8,
     flexDirection: "row",
     justifyContent: "space-between",
-    color: "#94A3B8",
-    fontSize: 7.5,
   },
+  footerText: { fontSize: 7, color: C.muted },
 });
 
-export default function ProfessionalInvoicePDF({ invoice, nurseryInfo: passedNurseryInfo }) {
+const money = (value) =>
+  `₹${Number(value || 0).toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+
+const date = (value) => {
+  if (!value) return "—";
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime())
+    ? "—"
+    : parsed.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+};
+
+export default function ProfessionalInvoicePDF({
+  invoice,
+  nurseryInfo: passedNurseryInfo,
+}) {
   if (!invoice) return null;
 
-  // Retrieve nursery details with fallback priority:
-  // 1. invoice.organizationId (populated from DB)
-  // 2. passed nurseryInfo prop
-  // 3. localStorage cached nursery_current_org_data
+  // Browser storage is optional. Keep this component safe for server rendering.
   const storedOrg = (() => {
     try {
-      return JSON.parse(localStorage.getItem("nursery_current_org_data") || "{}");
+      if (typeof window === "undefined") return {};
+      return JSON.parse(
+        window.localStorage.getItem("nursery_current_org_data") || "{}"
+      );
     } catch {
       return {};
     }
@@ -247,7 +310,7 @@ export default function ProfessionalInvoicePDF({ invoice, nurseryInfo: passedNur
       invoice.organizationId?.name ||
       passedNurseryInfo?.name ||
       storedOrg?.name ||
-      "NURSERYDESK",
+      "NurseryDesk",
     phone:
       invoice.organizationId?.phone ||
       passedNurseryInfo?.phone ||
@@ -276,182 +339,177 @@ export default function ProfessionalInvoicePDF({ invoice, nurseryInfo: passedNur
     return String(addr);
   };
 
-  const nurseryAddressFormatted = formatAddress(nursery.address);
-
   const isQuotation = invoice.documentType === "QUOTATION";
-  const docTitle = isQuotation ? "ESTIMATE / QUOTATION" : "NON-GST INVOICE";
+  const docTitle = isQuotation ? "QUOTATION" : "NON-GST INVOICE";
+  const customerName =
+    invoice.customerSnapshot?.name ||
+    invoice.customerId?.name ||
+    "Valued Customer";
+  const customerPhone =
+    invoice.customerSnapshot?.phone || invoice.customerId?.phone;
+  const customerAddress = formatAddress(invoice.customerSnapshot?.address);
+  const nurseryAddress = formatAddress(nursery.address);
 
   return (
-    <Document title={`${invoice.invoiceNumber || "Document"}.pdf`}>
-      <Page size="A4" style={styles.page}>
-        {/* Header Section */}
-        <View style={styles.headerContainer}>
-          <View style={{ maxWidth: "60%" }}>
+    <Document title={`${invoice.invoiceNumber || "NurseryDesk-Invoice"}.pdf`}>
+      <Page size="A4" style={styles.page} wrap>
+        <View style={styles.header}>
+          <View style={styles.brandBlock}>
             <Text style={styles.brandTitle}>{nursery.name}</Text>
           </View>
 
-          <View>
+          <View style={styles.documentBlock}>
             <View style={styles.docBadge}>
               <Text style={styles.docBadgeText}>{docTitle}</Text>
             </View>
-            <Text style={styles.docNumber}>{invoice.invoiceNumber}</Text>
+            <Text style={styles.docNumber}>{invoice.invoiceNumber || "—"}</Text>
             <Text style={styles.docMeta}>
-              Date: {new Date(invoice.invoiceDate || invoice.createdAt).toLocaleDateString("en-IN")}
+              {isQuotation ? "Quotation Date" : "Invoice Date"}: {date(invoice.invoiceDate || invoice.createdAt)}
             </Text>
-            {invoice.dueDate && (
+            {invoice.dueDate ? (
               <Text style={styles.docMeta}>
-                {isQuotation ? "Valid Until: " : "Due Date: "}
-                {new Date(invoice.dueDate).toLocaleDateString("en-IN")}
+                {isQuotation ? "Valid Until" : "Payment Due"}: {date(invoice.dueDate)}
               </Text>
-            )}
+            ) : null}
+            {invoice.branchName ? (
+              <Text style={styles.docMeta}>Branch: {invoice.branchName}</Text>
+            ) : null}
           </View>
         </View>
 
-        {/* Billed To / Issued By (Nursery Business Details) */}
         <View style={styles.partyGrid}>
           <View style={styles.partyCol}>
-            <Text style={styles.partyLabel}>Customer Details (Billed To)</Text>
-            <Text style={styles.partyName}>
-              {invoice.customerSnapshot?.name || invoice.customerId?.name || "Valued Customer"}
-            </Text>
-            {invoice.customerSnapshot?.businessName && (
-              <Text style={styles.partyDetail}>
-                {invoice.customerSnapshot.businessName}
-              </Text>
-            )}
-            <Text style={styles.partyDetail}>
-              Ph: {invoice.customerSnapshot?.phone || invoice.customerId?.phone || "—"}
-            </Text>
-            {invoice.customerSnapshot?.address && (
-              <Text style={styles.partyDetail}>
-                {formatAddress(invoice.customerSnapshot.address)}
-              </Text>
-            )}
+            <Text style={styles.sectionHeading}>Billed To</Text>
+            <Text style={styles.partyName}>{customerName}</Text>
+            {invoice.customerSnapshot?.businessName ? (
+              <Text style={styles.partyDetail}>{invoice.customerSnapshot.businessName}</Text>
+            ) : null}
+            {customerPhone ? (
+              <Text style={styles.partyDetail}>Phone: {customerPhone}</Text>
+            ) : null}
+            {customerAddress ? (
+              <Text style={styles.partyDetail}>{customerAddress}</Text>
+            ) : null}
           </View>
-
-          <View style={styles.partyCol}>
-            <Text style={styles.partyLabel}>Issued By (Nursery Business)</Text>
-            <Text style={styles.partyName}>{nursery.name}</Text>
-            {nursery.phone ? (
-              <Text style={styles.partyDetail}>Contact: {nursery.phone}</Text>
-            ) : null}
-            {nursery.email ? (
-              <Text style={styles.partyDetail}>Email: {nursery.email}</Text>
-            ) : null}
-            {nurseryAddressFormatted ? (
-              <Text style={styles.partyDetail}>{nurseryAddressFormatted}</Text>
-            ) : null}
+          <View style={styles.partyColRight}>
+            <Text style={styles.sectionHeading}>Issued By</Text>
+            <Text style={[styles.partyName, { fontFamily: "Times-Bold", fontSize: 11, color: C.forest }]}>
+              {nursery.name}
+            </Text>
+            {nursery.phone ? <Text style={styles.partyDetail}>Phone: {nursery.phone}</Text> : null}
+            {nursery.email ? <Text style={styles.partyDetail}>Email: {nursery.email}</Text> : null}
+            {nurseryAddress ? <Text style={styles.partyDetail}>{nurseryAddress}</Text> : null}
+            {invoice.branchName ? <Text style={styles.partyDetail}>Branch: {invoice.branchName}</Text> : null}
           </View>
         </View>
 
-        {/* Dynamic Plant Items Table */}
+        <Text style={styles.tableSectionTitle}>Plant Items & Specifications</Text>
         <View style={styles.table}>
           <View style={styles.tableHeader}>
-            <Text style={styles.colNo}>#</Text>
-            <Text style={styles.colItem}>Plant Item / Specifications</Text>
-            <Text style={styles.colVariety}>Variety / Size</Text>
-            <Text style={styles.colQty}>Qty</Text>
-            <Text style={styles.colRate}>Rate (₹)</Text>
-            <Text style={styles.colAmount}>Amount (₹)</Text>
+            <Text style={[styles.colNo, styles.headerText]}>#</Text>
+            <Text style={[styles.colItem, styles.headerText]}>PLANT / DESCRIPTION</Text>
+            <Text style={[styles.colVariety, styles.headerText]}>VARIETY / SIZE</Text>
+            <Text style={[styles.colQty, styles.headerText]}>QTY</Text>
+            <Text style={[styles.colRate, styles.headerText]}>RATE (₹)</Text>
+            <Text style={[styles.colAmount, styles.headerText]}>AMOUNT (₹)</Text>
           </View>
 
           {invoice.items?.map((item, idx) => (
-            <View key={idx} style={styles.tableRow}>
+            <View
+              key={item.id || `${item.plantName || "item"}-${idx}`}
+              style={[styles.tableRow, idx % 2 === 1 ? styles.tableRowAlt : {}]}
+              wrap={false}
+            >
               <Text style={styles.colNo}>{idx + 1}</Text>
               <View style={styles.colItem}>
-                <Text style={styles.itemTitle}>{item.plantName || item.description}</Text>
-                {item.description && item.description !== item.plantName && (
+                <Text style={styles.itemTitle}>{item.plantName || item.description || "Plant item"}</Text>
+                {item.description && item.description !== item.plantName ? (
                   <Text style={styles.itemSub}>{item.description}</Text>
-                )}
+                ) : null}
               </View>
               <View style={styles.colVariety}>
-                <Text>{item.variety || "—"}</Text>
-                {item.plantSize && <Text style={styles.itemSub}>{item.plantSize}</Text>}
+                <Text style={styles.cellText}>{item.variety || "—"}</Text>
+                {item.plantSize ? <Text style={styles.itemSub}>{item.plantSize}</Text> : null}
               </View>
-              <Text style={styles.colQty}>
+              <Text style={[styles.colQty, styles.cellText]}>
                 {item.quantity} {item.unitName || "PCS"}
               </Text>
-              <Text style={styles.colRate}>
-                {Number(item.unitPrice).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-              </Text>
-              <Text style={styles.colAmount}>
-                {Number(item.lineTotal).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-              </Text>
+              <Text style={[styles.colRate, styles.cellText]}>{money(item.unitPrice)}</Text>
+              <Text style={styles.colAmount}>{money(item.lineTotal)}</Text>
             </View>
           ))}
         </View>
 
-        {/* Additional Charges / Tariffs if present */}
-        {invoice.charges && invoice.charges.length > 0 && (
+        {invoice.charges?.length > 0 ? (
           <View style={styles.chargesSection}>
-            <Text style={styles.chargesHeader}>Additional Charges & Tariffs</Text>
-            {invoice.charges.map((ch, idx) => (
-              <View key={idx} style={styles.chargeRow}>
-                <Text>
-                  • {ch.name} {ch.description ? `(${ch.description})` : ""}
+            <Text style={styles.chargesHeader}>Additional Charges & Freight</Text>
+            {invoice.charges.map((charge, idx) => (
+              <View
+                key={charge.id || `${charge.name || "charge"}-${idx}`}
+                style={styles.chargeRow}
+                wrap={false}
+              >
+                <Text style={styles.chargeName}>
+                  {charge.name || "Additional charge"}
+                  {charge.description ? ` · ${charge.description}` : ""}
                 </Text>
-                <Text style={{ fontWeight: "bold" }}>
-                  +₹{Number(ch.amount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                </Text>
+                <Text style={styles.chargeAmount}>{money(charge.amount)}</Text>
               </View>
             ))}
           </View>
-        )}
+        ) : null}
 
-        {/* Summary Totals Box */}
-        <View style={styles.totalsContainer}>
+        <View style={styles.bottomGrid}>
+          {invoice.notes ? (
+            <View style={styles.notesBox}>
+              <Text style={styles.notesTitle}>Notes & Delivery Instructions</Text>
+              <Text style={styles.notesContent}>{invoice.notes}</Text>
+            </View>
+          ) : (
+            <View style={{ width: "48%" }} />
+          )}
+
           <View style={styles.totalsBox}>
             <View style={styles.totalLine}>
-              <Text>Plant Line Total:</Text>
-              <Text>₹{Number(invoice.subtotal || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</Text>
+              <Text>Plant Subtotal</Text>
+              <Text style={styles.totalValue}>{money(invoice.subtotal)}</Text>
             </View>
-
-            {invoice.chargesTotal > 0 && (
+            {Number(invoice.chargesTotal) > 0 ? (
               <View style={styles.totalLine}>
-                <Text>Additional Charges:</Text>
-                <Text style={{ color: "#123D2B" }}>
-                  +₹{Number(invoice.chargesTotal).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                <Text>Additional Charges</Text>
+                <Text style={styles.totalValue}>{money(invoice.chargesTotal)}</Text>
+              </View>
+            ) : null}
+            {Number(invoice.discountAmount) > 0 ? (
+              <View style={styles.totalLine}>
+                <Text>Discount</Text>
+                <Text style={[styles.totalValue, { color: "#B54747" }]}>
+                  -{money(invoice.discountAmount)}
                 </Text>
               </View>
-            )}
-
-            {invoice.discountAmount > 0 && (
-              <View style={styles.totalLine}>
-                <Text>Discount Applied:</Text>
-                <Text style={{ color: "#DC2626" }}>
-                  -₹{Number(invoice.discountAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                </Text>
-              </View>
-            )}
-
+            ) : null}
             <View style={styles.grandTotalLine}>
-              <Text style={styles.grandTotalText}>Grand Total:</Text>
-              <Text style={styles.grandTotalText}>
-                ₹{Number(invoice.grandTotal || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-              </Text>
+              <Text style={styles.grandTotalLabel}>Grand Total</Text>
+              <Text style={styles.grandTotalValue}>{money(invoice.grandTotal)}</Text>
             </View>
           </View>
         </View>
 
-        {/* Terms & Delivery Notes */}
-        {invoice.notes && (
-          <View style={styles.notesBox}>
-            <Text style={styles.notesTitle}>Delivery Instructions & Terms</Text>
-            <Text style={styles.notesContent}>{invoice.notes}</Text>
+        <View style={styles.signatureRow}>
+          <View style={styles.signatureBlock}>
+            <Text style={styles.signatureText}>Authorized Signature</Text>
           </View>
-        )}
+        </View>
 
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text>Generated via NurseryDesk SaaS Platform</Text>
-          <Text>
+        <View style={styles.footer} fixed>
+          <Text style={styles.footerText}>Thank you for your business.</Text>
+          <Text style={styles.footerText}>
             {isQuotation
-              ? "This is an estimate quotation and not an official tax invoice."
-              : "This is a computer generated non-GST bill."}
+              ? "Quotation only · Subject to confirmation"
+              : "Computer-generated non-GST bill · No signature required if digitally issued"}
           </Text>
         </View>
       </Page>
     </Document>
   );
 }
-

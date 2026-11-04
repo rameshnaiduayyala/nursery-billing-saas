@@ -1,7 +1,5 @@
 import React from "react";
-import { Receipt, Eye, Edit2, Ban, Trash2, ArrowRightCircle, Loader2, Download } from "lucide-react";
-import { PDFDownloadLink } from "@react-pdf/renderer";
-import ProfessionalInvoicePDF from "./ProfessionalInvoicePDF";
+import { Receipt, Eye, Edit2, Ban, Trash2, ArrowRightCircle, Loader2 } from "lucide-react";
 
 export default function InvoiceListTable({
   invoices,
@@ -120,22 +118,6 @@ export default function InvoiceListTable({
                     >
                       <Eye size={13} />
                     </button>
-
-                    {/* PDF Download Button */}
-                    <PDFDownloadLink
-                      document={<ProfessionalInvoicePDF invoice={inv} />}
-                      fileName={`${inv.invoiceNumber || (isQuotation ? "QUOTATION" : "INVOICE")}.pdf`}
-                      title="Download PDF"
-                      className="inline-flex items-center gap-1 rounded-lg border border-[#E2EAE3] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#123D2B] hover:bg-[#F5F7F1] transition cursor-pointer"
-                    >
-                      {({ loading }) =>
-                        loading ? (
-                          <Loader2 size={13} className="animate-spin text-[#123D2B]" />
-                        ) : (
-                          <Download size={13} />
-                        )
-                      }
-                    </PDFDownloadLink>
 
                     {/* Edit Button */}
                     {!isCancelled && (
