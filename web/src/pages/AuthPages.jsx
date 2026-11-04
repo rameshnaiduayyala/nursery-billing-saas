@@ -1,13 +1,67 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Sprout, ArrowRight, CheckCircle2, AlertCircle, Building2, User, Mail, Phone, Lock, MapPin, Loader2 } from "lucide-react";
+import {
+  Sprout, ArrowRight, CheckCircle2, AlertCircle, Building2, User,
+  Mail, Phone, Lock, MapPin, Loader2, ShieldCheck, Briefcase,
+  FileSpreadsheet, Calculator, Receipt, UserCheck
+} from "lucide-react";
 import { apiRequest } from "../lib/api";
+
+const quickLogins = [
+  {
+    role: "Super Admin",
+    email: "superadmin@nurseryos.com",
+    password: "Password@123",
+    icon: ShieldCheck,
+    color: "bg-purple-50 text-purple-700 hover:bg-purple-100 border-purple-200",
+  },
+  {
+    role: "Nursery Owner",
+    email: "owner@greenvalleynursery.in",
+    password: "Password@123",
+    icon: Briefcase,
+    color: "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200",
+  },
+  {
+    role: "Branch Manager",
+    email: "manager@greenvalleynursery.in",
+    password: "Password@123",
+    icon: Building2,
+    color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200",
+  },
+  {
+    role: "Accountant",
+    email: "accountant@greenvalleynursery.in",
+    password: "Password@123",
+    icon: Calculator,
+    color: "bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200",
+  },
+  {
+    role: "Billing Staff",
+    email: "billing@greenvalleynursery.in",
+    password: "Password@123",
+    icon: Receipt,
+    color: "bg-teal-50 text-teal-700 hover:bg-teal-100 border-teal-200",
+  },
+  {
+    role: "General Staff",
+    email: "staff@greenvalleynursery.in",
+    password: "Password@123",
+    icon: UserCheck,
+    color: "bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-300",
+  },
+];
 
 export function LoginPage() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const handleQuickLogin = (email, password) => {
+    setFormData({ email, password });
+    setError("");
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,12 +76,19 @@ export function LoginPage() {
 
       if (res.success && res.data) {
         localStorage.setItem("nursery_user", JSON.stringify(res.data.user));
-        if (res.data.workspaces && res.data.workspaces.length > 0) {
-          const defaultWs = res.data.workspaces[0];
-          localStorage.setItem("nursery_current_org", defaultWs.organization._id || defaultWs.organization.id);
-          localStorage.setItem("nursery_current_branch", defaultWs.branchAccess?.[0]?.branchId || "");
+
+        if (res.data.user?.isSuperAdmin) {
+          localStorage.removeItem("nursery_current_org");
+          localStorage.removeItem("nursery_current_branch");
+          navigate("/admin/organizations");
+        } else {
+          if (res.data.workspaces && res.data.workspaces.length > 0) {
+            const defaultWs = res.data.workspaces[0];
+            localStorage.setItem("nursery_current_org", defaultWs.organization._id || defaultWs.organization.id);
+            localStorage.setItem("nursery_current_branch", defaultWs.branchAccess?.[0]?.branchId || "");
+          }
+          navigate("/dashboard");
         }
-        navigate("/dashboard");
       }
     } catch (err) {
       setError(err.message || "Failed to sign in. Please verify your email and password.");
@@ -44,6 +105,33 @@ export function LoginPage() {
           <span>{error}</span>
         </div>
       )}
+
+      {/* Quick Login Icons */}
+      <div className="mb-6 rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5">
+        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2.5">
+          Quick Demo Login
+        </div>
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+          {quickLogins.map((item) => {
+            const Icon = item.icon;
+            const isSelected = formData.email === item.email;
+            return (
+              <button
+                key={item.role}
+                type="button"
+                onClick={() => handleQuickLogin(item.email, item.password)}
+                className={`flex flex-col items-center justify-center gap-1 rounded-xl border p-2 text-center transition ${item.color} ${
+                  isSelected ? "ring-2 ring-emerald-600 shadow-sm" : ""
+                }`}
+                title={`Click to fill ${item.role} credentials (${item.email})`}
+              >
+                <Icon size={16} />
+                <span className="text-[10px] font-bold leading-tight">{item.role}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>

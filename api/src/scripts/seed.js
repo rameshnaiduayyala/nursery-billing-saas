@@ -5,125 +5,194 @@ import { User, Organization, Branch, Role, Membership, Permission } from "../mod
 
 const mongoUri = process.env.MONGODB_URI || "mongodb://localhost:27017/nursery_management";
 
-const permissionsList = [
-  "*",
-  "organization.manage",
-  "branch.create",
-  "branch.update",
-  "employee.invite",
-  "customer.create",
-  "customer.view",
-  "quotation.create",
-  "quotation.approve",
-  "invoice.create",
-  "invoice.issue",
-  "invoice.cancel",
-  "payment.create",
-  "payment.refund",
-  "report.view",
-  "settings.manage",
-  "platform.admin",
-];
-
-async function seed() {
+async function seedAllUsers() {
   try {
     console.log("Connecting to database at:", mongoUri.replace(/\/\/[^:]+:[^@]+@/, "//***:***@"));
     await mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 5000 });
     console.log("Connected to MongoDB.");
 
-    // 1. Seed Permissions
-    for (const key of permissionsList) {
-      await Permission.findOneAndUpdate(
-        { key },
-        { key, description: key === "*" ? "Full System Access" : key.replaceAll(".", " ") },
-        { upsert: true, new: true }
-      );
-    }
-    console.log(`Seeded ${permissionsList.length} permissions.`);
+    const defaultPassword = "Password@123";
+    const passwordHash = await bcrypt.hash(defaultPassword, 10);
 
-    // 2. Super Admin Credentials
-    const superAdminEmail = process.env.SUPER_ADMIN_EMAIL || "superadmin@nurseryos.com";
-    const superAdminPassword = process.env.SUPER_ADMIN_PASSWORD || "SuperAdmin@123";
-    const superAdminName = "Platform Super Admin";
-    const superAdminPhone = "+91 99999 00000";
-
-    const passwordHash = await bcrypt.hash(superAdminPassword, 10);
-
-    // Upsert Super Admin User
-    const superAdminUser = await User.findOneAndUpdate(
-      { email: superAdminEmail },
+    // ==========================================
+    // 1. GLOBAL SUPER ADMIN (No nursery, No branch)
+    // ==========================================
+    const superAdmin = await User.findOneAndUpdate(
+      { email: "superadmin@nurseryos.com" },
       {
-        name: superAdminName,
-        email: superAdminEmail,
-        phone: superAdminPhone,
+        name: "Platform Super Admin",
+        email: "superadmin@nurseryos.com",
+        phone: "+91 99999 00000",
         passwordHash,
+        isSuperAdmin: true,
         isActive: true,
       },
       { upsert: true, new: true }
     );
-    console.log(`Super Admin user ready: ${superAdminUser.email}`);
+    console.log("Seeded Super Admin:", superAdmin.email);
 
-    // 3. Platform Administration Tenant Organization
-    const platformOrg = await Organization.findOneAndUpdate(
-      { slug: "platform-administration" },
+    // ==========================================
+    // 2. NURSERY BUSINESS & BRANCHES
+    // ==========================================
+    const organization = await Organization.findOneAndUpdate(
+      { slug: "green-valley-farm" },
       {
-        name: "NurseryOS Platform HQ",
-        slug: "platform-administration",
+        name: "Green Valley Farm & Wholesale Nursery",
+        slug: "green-valley-farm",
         status: "APPROVED",
-        phone: superAdminPhone,
-        email: superAdminEmail,
-        address: { city: "Central HQ", state: "Administration", pincode: "000000" },
+        phone: "+91 98221 44556",
+        email: "contact@greenvalleynursery.in",
+        address: { city: "Kadiyam", state: "Andhra Pradesh", pincode: "533126" },
       },
       { upsert: true, new: true }
     );
 
-    // 4. HQ Branch
-    const hqBranch = await Branch.findOneAndUpdate(
-      { organizationId: platformOrg._id, code: "HQ" },
+    const mainBranch = await Branch.findOneAndUpdate(
+      { organizationId: organization._id, code: "MAIN" },
       {
-        organizationId: platformOrg._id,
-        name: "Central Platform Branch",
-        code: "HQ",
-        phone: superAdminPhone,
+        organizationId: organization._id,
+        name: "Main Polyhouse & Farm",
+        code: "MAIN",
+        phone: "+91 98221 11223",
+        address: { city: "Kadiyam Rural" },
         isDefault: true,
         isActive: true,
       },
       { upsert: true, new: true }
     );
 
-    // 5. Super Admin Role
-    const superAdminRole = await Role.findOneAndUpdate(
-      { organizationId: platformOrg._id, key: "SUPER_ADMIN" },
+    const highwayBranch = await Branch.findOneAndUpdate(
+      { organizationId: organization._id, code: "HWY" },
       {
-        organizationId: platformOrg._id,
-        name: "Super Administrator",
-        key: "SUPER_ADMIN",
-        isSystem: true,
-        permissions: ["*"],
+        organizationId: organization._id,
+        name: "National Highway Depot Outlet",
+        code: "HWY",
+        phone: "+91 98221 44557",
+        address: { city: "NH-16 Bypass" },
+        isDefault: false,
+        isActive: true,
       },
       { upsert: true, new: true }
     );
 
-    // 6. Membership
-    await Membership.findOneAndUpdate(
-      { userId: superAdminUser._id, organizationId: platformOrg._id },
-      {
-        userId: superAdminUser._id,
-        organizationId: platformOrg._id,
-        roleId: superAdminRole._id,
-        status: "ACTIVE",
-        branchAccess: [{ branchId: hqBranch._id, isDefault: true }],
-      },
-      { upsert: true, new: true }
-    );
+    // ==========================================
+    // 3. ROLES DEFINITIONS
+    // ==========================================
+    const rolesConfig = [
+      { key: "OWNER", name: "Nursery Owner", permissions: ["*"] },
+      { key: "BRANCH_MANAGER", name: "Branch Manager", permissions: ["branch.manage", "quotation.*", "invoice.*", "customer.*", "product.*"] },
+      { key: "ACCOUNTANT", name: "Accountant", permissions: ["invoice.view", "payment.*", "expense.*", "report.*", "customer.ledger"] },
+      { key: "BILLING_STAFF", name: "Billing Staff", permissions: ["quotation.create", "quotation.view", "invoice.create", "invoice.view", "customer.create"] },
+      { key: "GENERAL_STAFF", name: "General Staff", permissions: ["product.view", "quotation.view"] },
+    ];
 
-    console.log("--------------------------------------------------");
-    console.log("SUPER ADMIN SEEDED SUCCESSFULLY:");
-    console.log("Email:    " + superAdminEmail);
-    console.log("Password: " + superAdminPassword);
-    console.log("Role:     SUPER_ADMIN (Full Platform Privileges)");
-    console.log("Tenant:   " + platformOrg.name);
-    console.log("--------------------------------------------------");
+    const roleMap = {};
+    for (const r of rolesConfig) {
+      const role = await Role.findOneAndUpdate(
+        { organizationId: organization._id, key: r.key },
+        {
+          organizationId: organization._id,
+          name: r.name,
+          key: r.key,
+          isSystem: true,
+          permissions: r.permissions,
+        },
+        { upsert: true, new: true }
+      );
+      roleMap[r.key] = role;
+    }
+
+    // ==========================================
+    // 4. NURSERY USERS & ROLE ASSIGNMENTS
+    // ==========================================
+    const usersToSeed = [
+      {
+        email: "owner@greenvalleynursery.in",
+        name: "Ramesh Patel (Owner)",
+        phone: "+91 98221 44556",
+        roleKey: "OWNER",
+        branches: [{ branchId: mainBranch._id, isDefault: true }, { branchId: highwayBranch._id, isDefault: false }],
+      },
+      {
+        email: "manager@greenvalleynursery.in",
+        name: "Suresh Reddy (Branch Manager)",
+        phone: "+91 98221 22334",
+        roleKey: "BRANCH_MANAGER",
+        branches: [{ branchId: mainBranch._id, isDefault: true }],
+      },
+      {
+        email: "accountant@greenvalleynursery.in",
+        name: "Pooja Sharma (Accountant)",
+        phone: "+91 98221 33445",
+        roleKey: "ACCOUNTANT",
+        branches: [{ branchId: mainBranch._id, isDefault: true }, { branchId: highwayBranch._id, isDefault: false }],
+      },
+      {
+        email: "billing@greenvalleynursery.in",
+        name: "Vikas Kumar (Billing Staff)",
+        phone: "+91 98221 55667",
+        roleKey: "BILLING_STAFF",
+        branches: [{ branchId: highwayBranch._id, isDefault: true }],
+      },
+      {
+        email: "staff@greenvalleynursery.in",
+        name: "Anand Verma (General Staff)",
+        phone: "+91 98221 66778",
+        roleKey: "GENERAL_STAFF",
+        branches: [{ branchId: mainBranch._id, isDefault: true }],
+      },
+    ];
+
+    for (const u of usersToSeed) {
+      const user = await User.findOneAndUpdate(
+        { email: u.email },
+        {
+          name: u.name,
+          email: u.email,
+          phone: u.phone,
+          passwordHash,
+          isSuperAdmin: false,
+          isActive: true,
+        },
+        { upsert: true, new: true }
+      );
+
+      await Membership.findOneAndUpdate(
+        { userId: user._id, organizationId: organization._id },
+        {
+          userId: user._id,
+          organizationId: organization._id,
+          roleId: roleMap[u.roleKey]._id,
+          status: "ACTIVE",
+          branchAccess: u.branches,
+        },
+        { upsert: true, new: true }
+      );
+      console.log(`Seeded User: ${u.email} [${u.roleKey}]`);
+    }
+
+    console.log("\n=======================================================");
+    console.log("ALL TYPE USERS SEEDED SUCCESSFULLY:");
+    console.log("Default Password for all seeded users: " + defaultPassword);
+    console.log("-------------------------------------------------------");
+    console.log("1. SUPER ADMIN (No nursery / branches):");
+    console.log("   Email: superadmin@nurseryos.com");
+    console.log("-------------------------------------------------------");
+    console.log("2. NURSERY OWNER (All branches & permissions):");
+    console.log("   Email: owner@greenvalleynursery.in");
+    console.log("-------------------------------------------------------");
+    console.log("3. BRANCH MANAGER (Assigned Main Branch):");
+    console.log("   Email: manager@greenvalleynursery.in");
+    console.log("-------------------------------------------------------");
+    console.log("4. ACCOUNTANT (Payments, Ledgers, Expenses, Reports):");
+    console.log("   Email: accountant@greenvalleynursery.in");
+    console.log("-------------------------------------------------------");
+    console.log("5. BILLING STAFF (Quotations, Invoices, Customers):");
+    console.log("   Email: billing@greenvalleynursery.in");
+    console.log("-------------------------------------------------------");
+    console.log("6. GENERAL STAFF (Plant catalog & view access):");
+    console.log("   Email: staff@greenvalleynursery.in");
+    console.log("=======================================================\n");
   } catch (error) {
     console.error("Seeding error:", error.message);
   } finally {
@@ -132,4 +201,4 @@ async function seed() {
   }
 }
 
-seed();
+seedAllUsers();

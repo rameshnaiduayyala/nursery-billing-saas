@@ -47,10 +47,11 @@ export default async function authRoutes(app) {
       email,
       phone,
       passwordHash,
+      isSuperAdmin: false,
       isActive: true,
     });
 
-    // Create Organization (Status APPROVED for immediate usability or PENDING for verification)
+    // Create Organization (Status PENDING or APPROVED)
     const organization = await Organization.create({
       name: businessName,
       slug,
@@ -100,7 +101,7 @@ export default async function authRoutes(app) {
     });
   });
 
-  // Login
+  // Login (Supports Super Admin without any nursery/branch, as well as Nursery Staff/Owners)
   app.post("/auth/login", async (request, reply) => {
     const parsed = loginSchema.safeParse(request.body);
     if (!parsed.success) {
@@ -108,7 +109,7 @@ export default async function authRoutes(app) {
     }
 
     const { email, password } = parsed.data;
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user || !user.isActive) {
       return reply.code(401).send({ success: false, message: "Invalid email or password" });
     }
@@ -118,6 +119,25 @@ export default async function authRoutes(app) {
       return reply.code(401).send({ success: false, message: "Invalid email or password" });
     }
 
+    // Super Admin check: global administrator has NO nursery and NO branches
+    if (user.isSuperAdmin) {
+      return reply.send({
+        success: true,
+        data: {
+          user: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            isSuperAdmin: true,
+          },
+          workspaces: [], // No nursery tenant, no branches
+          role: "SUPER_ADMIN",
+        },
+      });
+    }
+
+    // Standard nursery owner or employee with organization memberships
     const memberships = await Membership.find({ userId: user._id, status: "ACTIVE" })
       .populate("organizationId")
       .populate("roleId");
@@ -125,7 +145,13 @@ export default async function authRoutes(app) {
     return reply.send({
       success: true,
       data: {
-        user: { id: user._id, name: user.name, email: user.email, phone: user.phone },
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          isSuperAdmin: false,
+        },
         workspaces: memberships.map((m) => ({
           membershipId: m._id,
           organization: m.organizationId,
