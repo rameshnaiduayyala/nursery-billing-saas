@@ -16,6 +16,12 @@ import employeeRoutes from "./modules/employees/employees.routes.js";
 import customerLedgerRoutes from "./modules/ledger/ledger.routes.js";
 import customerPortalRoutes from "./modules/customer-portal/customer-portal.routes.js";
 import adminRoutes from "./modules/admin/admin.routes.js";
+import roleRoutes from "./modules/roles/roles.routes.js";
+import notificationRoutes from "./modules/notifications/notifications.routes.js";
+import organizationRoutes from "./modules/organizations/organizations.routes.js";
+import fileRoutes from "./modules/files/files.routes.js";
+import receiptRoutes from "./modules/receipts/receipts.routes.js";
+import auditRoutes from "./modules/audit/audit.routes.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -42,10 +48,16 @@ export async function buildApp() {
   await app.register(quotationRoutes, { prefix: "/api/v1" });
   await app.register(invoiceRoutes, { prefix: "/api/v1" });
   await app.register(paymentRoutes, { prefix: "/api/v1" });
+  await app.register(receiptRoutes, { prefix: "/api/v1" });
   await app.register(expenseRoutes, { prefix: "/api/v1" });
   await app.register(chargeRoutes, { prefix: "/api/v1" });
   await app.register(reportRoutes, { prefix: "/api/v1" });
   await app.register(adminRoutes, { prefix: "/api/v1" });
+  await app.register(roleRoutes, { prefix: "/api/v1" });
+  await app.register(notificationRoutes, { prefix: "/api/v1" });
+  await app.register(organizationRoutes, { prefix: "/api/v1" });
+  await app.register(fileRoutes, { prefix: "/api/v1" });
+  await app.register(auditRoutes, { prefix: "/api/v1" });
 
   app.setErrorHandler((error, request, reply) => {
     request.log.error(error);
