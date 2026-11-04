@@ -58,6 +58,7 @@ const invoiceSchema = new mongoose.Schema(
     balanceDue: { type: Number, required: true },
     customerSnapshot: { type: mongoose.Schema.Types.Mixed, default: null },
     branchSnapshot: { type: mongoose.Schema.Types.Mixed, default: null },
+    organizationSnapshot: { type: mongoose.Schema.Types.Mixed, default: null },
     visibleColumns: [{ type: String }],
     notes: { type: String, default: null },
     issuedAt: { type: Date, default: null },

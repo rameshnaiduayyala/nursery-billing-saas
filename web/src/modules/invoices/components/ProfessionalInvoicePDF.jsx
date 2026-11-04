@@ -1,261 +1,445 @@
 import React from "react";
-import {
-  Document,
-  Page,
-  Text,
-  View,
-  StyleSheet,
-} from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 
+// Premium Luxury Horticulture Color Palette
 const C = {
-  forest: "#123D2B",
-  green: "#176B45",
-  emerald: "#278457",
-  ink: "#17251E",
-  body: "#42534A",
-  muted: "#718078",
-  line: "#DCE7DF",
-  soft: "#F4F8F3",
-  softGreen: "#EAF3EA",
-  white: "#FFFFFF",
+  // Deep Regal Forest & Emerald Tones
+  primary: "#0B2E1E", // Deep Regal Forest Green
+  primaryDark: "#061A11", // Midnight Emerald
+  primaryMedium: "#13422C", // Rich British Forest
+  primarySoft: "#1B593B", // Soft Botanical Emerald
+
+  // Champagne Gold & Warm Luxury Accents
+  gold: "#C5A059", // Warm Antique Champagne Gold
+  goldDark: "#9A7836", // Deep Gold for Text
+  goldLight: "#FBF7EE", // Subtle Champagne Ivory Tint
+  goldBorder: "#DECBB0", // Refined Gold Hairline
+
+  // High-End Typography Neutrals
+  ink: "#0F172A", // Slate 900 for Crisp Contrast
+  inkSecondary: "#334155", // Slate 700 for Body Content
+  muted: "#64748B", // Slate 500 for Clean Labels
+  mutedLight: "#94A3B8", // Slate 400 for Minor Captions
+
+  // Paper & Surface Tones
+  paper: "#FFFFFF",
+  paperWarm: "#FAFBF9", // Fine Linen / Warm Ivory
+  paperTint: "#F4F7F4", // Soft Botanical Sage Tint
+  borderLight: "#E2E8E0", // Subtle Card Border
+  borderDotted: "#CBD5E1", // Clean Divider
+
+  // Status Accents
+  danger: "#DC2626",
+  dangerLight: "#FEF2F2",
+  dangerBorder: "#FCA5A5",
 };
 
 const styles = StyleSheet.create({
   page: {
-    paddingTop: 34,
-    paddingBottom: 58,
-    paddingHorizontal: 38,
+    paddingTop: 30,
+    paddingBottom: 48,
+    paddingHorizontal: 36,
     fontFamily: "Helvetica",
-    fontSize: 9,
+    fontSize: 8.5,
     color: C.ink,
-    backgroundColor: C.white,
+    backgroundColor: C.paper,
     lineHeight: 1.4,
   },
-  header: {
+
+  // Top Luxury Accent Bar
+  topAccentBar: {
+    height: 4,
+    backgroundColor: C.primary,
+    marginBottom: 20,
+    borderRadius: 2,
+  },
+  topGoldStripe: {
+    height: 1.5,
+    backgroundColor: C.gold,
+    marginTop: -1.5,
+    borderRadius: 1,
+  },
+
+  // Header Section
+  headerContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
     paddingBottom: 16,
-    marginBottom: 18,
-    borderBottomWidth: 2,
-    borderBottomColor: C.forest,
+    marginBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: C.borderLight,
   },
-  brandBlock: { width: "57%" },
+  brandBlock: {
+    width: "60%",
+    paddingRight: 10,
+  },
   brandTitle: {
     fontFamily: "Times-Bold",
-    fontSize: 24,
-    color: C.forest,
+    fontSize: 18,
+    lineHeight: 1.25,
+    color: C.primary,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+    marginBottom: 4,
+  },
+  brandTagline: {
+    fontFamily: "Times-Italic",
+    fontSize: 8.5,
+    color: C.goldDark,
+    letterSpacing: 0.4,
+    marginBottom: 4,
+  },
+  brandMetaRow: {
+    fontSize: 7.8,
+    color: C.inkSecondary,
+    lineHeight: 1.4,
+  },
+
+  // Document Info Block (Right Aligned)
+  docBlock: {
+    width: "38%",
+    alignItems: "flex-end",
+  },
+  docBadge: {
+    backgroundColor: C.primary,
+    paddingVertical: 5,
+    paddingHorizontal: 12,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: C.gold,
+    marginBottom: 6,
+  },
+  docBadgeText: {
+    color: C.goldLight,
+    fontFamily: "Helvetica-Bold",
+    fontSize: 8.5,
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+  },
+  docNumberText: {
+    fontFamily: "Helvetica-Bold",
+    fontSize: 14,
+    color: C.primary,
+    letterSpacing: 0.5,
+    marginBottom: 4,
+    textAlign: "right",
+  },
+  metaGrid: {
+    marginTop: 2,
+    alignItems: "flex-end",
+  },
+  metaRow: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginBottom: 2.5,
+  },
+  metaLabel: {
+    fontSize: 7.8,
+    color: C.muted,
+    marginRight: 4,
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
+  },
+  metaValue: {
+    fontSize: 8,
+    fontFamily: "Helvetica-Bold",
+    color: C.ink,
+  },
+
+  // Party Grid (Billed To & Issued By Cards)
+  partyGrid: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 18,
+  },
+  partyCard: {
+    width: "48.5%",
+    backgroundColor: C.paperWarm,
+    borderWidth: 1,
+    borderColor: C.borderLight,
+    borderRadius: 6,
+    padding: 11,
+  },
+  partyHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 6,
+    paddingBottom: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: C.borderLight,
+  },
+  goldDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: C.gold,
+    marginRight: 5,
+  },
+  partyLabel: {
+    fontSize: 7.2,
+    fontFamily: "Helvetica-Bold",
+    color: C.primaryMedium,
     letterSpacing: 0.8,
     textTransform: "uppercase",
   },
-  tagline: {
-    fontFamily: "Times-Italic",
-    marginTop: 4,
-    fontSize: 8.5,
-    color: C.green,
-    letterSpacing: 0.5,
+  partyName: {
+    fontFamily: "Times-Bold",
+    fontSize: 10.5,
+    lineHeight: 1.25,
+    color: C.ink,
+    marginBottom: 3,
   },
-  businessMeta: {
-    marginTop: 8,
+  partyBusinessName: {
+    fontSize: 8.2,
+    fontFamily: "Helvetica-Bold",
+    color: C.primaryMedium,
+    marginBottom: 3,
+  },
+  partyText: {
+    fontSize: 7.8,
+    color: C.inkSecondary,
+    marginBottom: 2,
+    lineHeight: 1.4,
+  },
+
+  // Table Section
+  tableHeadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 7,
+  },
+  tableHeadingText: {
     fontSize: 8,
-    color: C.body,
-    lineHeight: 1.55,
-  },
-  documentBlock: { width: "39%", alignItems: "flex-end" },
-  docBadge: {
-    backgroundColor: C.forest,
-    paddingVertical: 6,
-    paddingHorizontal: 11,
-    borderRadius: 4,
-  },
-  docBadgeText: {
-    color: C.white,
-    fontSize: 8,
-    fontWeight: "bold",
-    letterSpacing: 0.65,
-  },
-  docNumber: {
-    marginTop: 9,
-    fontSize: 14,
-    fontWeight: "bold",
-    color: C.forest,
-    textAlign: "right",
-  },
-  docMeta: {
-    marginTop: 3,
-    fontSize: 8,
-    color: C.muted,
-    textAlign: "right",
-  },
-  sectionHeading: {
-    fontSize: 8,
-    fontWeight: "bold",
-    color: C.green,
-    letterSpacing: 0.7,
-    marginBottom: 8,
+    fontFamily: "Helvetica-Bold",
+    color: C.primary,
+    letterSpacing: 0.8,
     textTransform: "uppercase",
   },
-  partyGrid: {
-    flexDirection: "row",
-    marginBottom: 20,
+  tableFrame: {
     borderWidth: 1,
-    borderColor: C.line,
-    borderRadius: 7,
-    backgroundColor: C.soft,
-    padding: 13,
-  },
-  partyCol: { width: "50%", paddingRight: 12 },
-  partyColRight: {
-    width: "50%",
-    paddingLeft: 14,
-    borderLeftWidth: 1,
-    borderLeftColor: C.line,
-  },
-  partyName: {
-    fontSize: 10,
-    fontWeight: "bold",
-    color: C.ink,
-    marginBottom: 4,
-  },
-  partyDetail: {
-    fontSize: 8,
-    color: C.body,
-    marginTop: 2,
-    lineHeight: 1.45,
-  },
-  tableSectionTitle: {
-    fontSize: 9,
-    fontWeight: "bold",
-    color: C.forest,
-    marginBottom: 8,
-  },
-  table: {
-    borderWidth: 1,
-    borderColor: C.line,
+    borderColor: C.borderLight,
     borderRadius: 6,
     overflow: "hidden",
   },
   tableHeader: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: C.forest,
-    paddingVertical: 9,
+    backgroundColor: C.primary,
+    paddingVertical: 8,
     paddingHorizontal: 8,
   },
-  headerText: {
-    color: C.white,
+  thText: {
+    color: C.paper,
+    fontFamily: "Helvetica-Bold",
     fontSize: 7.2,
-    fontWeight: "bold",
-    letterSpacing: 0.25,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
   },
   tableRow: {
     flexDirection: "row",
     alignItems: "center",
-    minHeight: 37,
-    paddingVertical: 8,
+    minHeight: 34,
+    paddingVertical: 6,
     paddingHorizontal: 8,
-    borderBottomWidth: 0.7,
-    borderBottomColor: C.line,
+    borderBottomWidth: 0.6,
+    borderBottomColor: C.borderLight,
   },
-  tableRowAlt: { backgroundColor: "#FAFCFA" },
+  tableRowAlt: {
+    backgroundColor: C.paperWarm,
+  },
+
+  // Table Columns
   colNo: { width: "5%", textAlign: "center", color: C.muted },
-  colItem: { width: "34%", paddingRight: 5 },
+  colItem: { width: "35%", paddingRight: 6 },
   colVariety: { width: "19%", paddingRight: 4 },
-  colQty: { width: "12%", textAlign: "center" },
+  colQty: { width: "11%", textAlign: "center" },
   colRate: { width: "14%", textAlign: "right" },
-  colAmount: { width: "16%", textAlign: "right", fontWeight: "bold", color: C.forest },
-  itemTitle: { fontSize: 8.5, fontWeight: "bold", color: C.ink },
-  itemSub: { fontSize: 7.2, color: C.muted, marginTop: 2 },
-  cellText: { fontSize: 8, color: C.body },
-  chargesSection: {
-    marginTop: 15,
-    padding: 12,
+  colAmount: {
+    width: "16%",
+    textAlign: "right",
+    fontFamily: "Helvetica-Bold",
+    color: C.primary,
+  },
+
+  itemTitle: {
+    fontFamily: "Helvetica-Bold",
+    fontSize: 8.2,
+    color: C.ink,
+  },
+  itemSub: {
+    fontSize: 7.2,
+    color: C.muted,
+    marginTop: 1.5,
+  },
+  cellText: {
+    fontSize: 8,
+    color: C.inkSecondary,
+  },
+
+  // Additional Charges Section
+  chargesBox: {
+    marginTop: 14,
+    padding: 10,
+    backgroundColor: C.paperWarm,
     borderWidth: 1,
-    borderColor: C.line,
+    borderColor: C.borderLight,
     borderRadius: 6,
-    backgroundColor: "#FBFCFA",
   },
   chargesHeader: {
-    fontSize: 8,
-    fontWeight: "bold",
-    color: C.forest,
-    letterSpacing: 0.5,
-    marginBottom: 8,
+    fontSize: 7.5,
+    fontFamily: "Helvetica-Bold",
+    color: C.primary,
+    letterSpacing: 0.7,
     textTransform: "uppercase",
+    marginBottom: 6,
   },
   chargeRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 5,
-    borderBottomWidth: 0.6,
-    borderBottomColor: C.line,
+    alignItems: "center",
+    paddingVertical: 4,
+    borderBottomWidth: 0.5,
+    borderBottomColor: C.borderLight,
   },
-  chargeName: { fontSize: 8, color: C.body, width: "75%" },
-  chargeAmount: { fontSize: 8, color: C.forest, fontWeight: "bold" },
+  chargeName: {
+    fontSize: 7.8,
+    color: C.inkSecondary,
+    width: "75%",
+  },
+  chargeAmount: {
+    fontSize: 7.8,
+    fontFamily: "Helvetica-Bold",
+    color: C.primaryMedium,
+  },
+
+  // Bottom Grid (Notes & Summary Totals)
   bottomGrid: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginTop: 16,
+    marginTop: 14,
   },
-  notesBox: {
-    width: "48%",
-    padding: 11,
+  notesCard: {
+    width: "48.5%",
+    backgroundColor: C.paper,
     borderWidth: 1,
-    borderColor: C.line,
+    borderColor: C.borderLight,
     borderRadius: 6,
-    backgroundColor: C.white,
+    padding: 10,
   },
-  notesTitle: {
+  notesHeading: {
+    fontSize: 7.5,
+    fontFamily: "Helvetica-Bold",
+    color: C.primary,
+    letterSpacing: 0.7,
+    textTransform: "uppercase",
+    marginBottom: 5,
+  },
+  notesBody: {
+    fontSize: 7.8,
+    color: C.inkSecondary,
+    lineHeight: 1.5,
+  },
+  paymentNotice: {
+    marginTop: 8,
+    paddingTop: 6,
+    borderTopWidth: 0.6,
+    borderTopColor: C.borderLight,
+    fontSize: 7.2,
+    color: C.muted,
+    fontFamily: "Times-Italic",
+  },
+
+  // Totals Box
+  totalsCard: {
+    width: "47%",
+    backgroundColor: C.paperWarm,
+    borderWidth: 1,
+    borderColor: C.borderLight,
+    borderRadius: 6,
+    padding: 10,
+  },
+  totalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 5.5,
+  },
+  totalLabel: {
     fontSize: 8,
-    fontWeight: "bold",
-    color: C.green,
-    letterSpacing: 0.5,
-    marginBottom: 6,
+    color: C.muted,
+  },
+  totalVal: {
+    fontSize: 8.2,
+    fontFamily: "Helvetica-Bold",
+    color: C.ink,
+  },
+  discountVal: {
+    fontSize: 8.2,
+    fontFamily: "Helvetica-Bold",
+    color: "#B91C1C",
+  },
+  grandTotalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 6,
+    paddingTop: 8,
+    borderTopWidth: 1.5,
+    borderTopColor: C.gold,
+    backgroundColor: C.primary,
+    marginHorizontal: -10,
+    marginBottom: -10,
+    paddingHorizontal: 10,
+    paddingBottom: 8,
+    borderBottomLeftRadius: 5,
+    borderBottomRightRadius: 5,
+  },
+  grandTotalLabel: {
+    fontSize: 9,
+    fontFamily: "Helvetica-Bold",
+    color: C.goldLight,
+    letterSpacing: 0.8,
     textTransform: "uppercase",
   },
-  notesContent: { fontSize: 8, color: C.body, lineHeight: 1.55 },
-  totalsBox: {
-    width: "46%",
-    padding: 12,
-    borderWidth: 1,
-    borderColor: C.line,
-    borderRadius: 7,
-    backgroundColor: C.soft,
+  grandTotalVal: {
+    fontSize: 12.5,
+    fontFamily: "Helvetica-Bold",
+    color: C.paper,
   },
-  totalLine: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 7,
-    fontSize: 8.5,
-    color: C.body,
-  },
-  totalValue: { fontSize: 8.5, color: C.ink, fontWeight: "bold" },
-  grandTotalLine: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 5,
-    paddingTop: 9,
-    borderTopWidth: 1.3,
-    borderTopColor: C.green,
-  },
-  grandTotalLabel: { fontSize: 10, fontWeight: "bold", color: C.forest },
-  grandTotalValue: { fontSize: 13, fontWeight: "bold", color: C.forest },
-  signatureRow: {
+
+  // Signature Block
+  signatureGrid: {
     flexDirection: "row",
     justifyContent: "flex-end",
-    marginTop: 28,
+    marginTop: 22,
   },
-  signatureBlock: {
-    width: 155,
-    borderTopWidth: 0.8,
-    borderTopColor: C.muted,
-    paddingTop: 5,
+  signatureBox: {
+    width: 170,
     alignItems: "center",
   },
-  signatureText: { fontSize: 7.5, color: C.muted },
-  watermarkWrapper: {
+  signatureLine: {
+    width: "100%",
+    borderTopWidth: 0.8,
+    borderTopColor: C.muted,
+    marginBottom: 4,
+  },
+  signatureSignatoryText: {
+    fontSize: 7.5,
+    fontFamily: "Helvetica-Bold",
+    color: C.inkSecondary,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  signatureFirmText: {
+    fontSize: 6.8,
+    color: C.muted,
+    marginTop: 1,
+  },
+
+  // Cancelled Watermark
+  watermarkContainer: {
     position: "absolute",
     top: 250,
     left: 40,
@@ -263,34 +447,42 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     zIndex: 10,
-    transform: "rotate(-32deg)",
+    transform: "rotate(-30deg)",
+  },
+  watermarkBox: {
+    borderWidth: 4,
+    borderColor: "#DC2626",
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 24,
+    backgroundColor: "rgba(254, 242, 242, 0.4)",
   },
   watermarkText: {
-    fontSize: 66,
-    fontWeight: "bold",
+    fontSize: 54,
     fontFamily: "Helvetica-Bold",
     color: "#DC2626",
-    opacity: 0.16,
+    opacity: 0.18,
     letterSpacing: 8,
     textTransform: "uppercase",
-    borderWidth: 5,
-    borderColor: "#DC2626",
-    paddingVertical: 10,
-    paddingHorizontal: 26,
-    borderRadius: 8,
   },
+
+  // Footer Section
   footer: {
     position: "absolute",
-    bottom: 25,
-    left: 38,
-    right: 38,
-    borderTopWidth: 1,
-    borderTopColor: C.line,
-    paddingTop: 8,
+    bottom: 20,
+    left: 36,
+    right: 36,
+    borderTopWidth: 0.7,
+    borderTopColor: C.borderLight,
+    paddingTop: 6,
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
   },
-  footerText: { fontSize: 7, color: C.muted },
+  footerText: {
+    fontSize: 6.8,
+    color: C.mutedLight,
+  },
 });
 
 const money = (value) =>
@@ -317,12 +509,12 @@ export default function ProfessionalInvoicePDF({
 }) {
   if (!invoice) return null;
 
-  // Browser storage is optional. Keep this component safe for server rendering.
+  // Retrieve nursery details with fallback priority
   const storedOrg = (() => {
     try {
       if (typeof window === "undefined") return {};
       return JSON.parse(
-        window.localStorage.getItem("nursery_current_org_data") || "{}"
+        window.localStorage.getItem("nursery_current_org_data") || "{}",
       );
     } catch {
       return {};
@@ -331,21 +523,25 @@ export default function ProfessionalInvoicePDF({
 
   const nursery = {
     name:
+      invoice.organizationSnapshot?.name ||
       invoice.organizationId?.name ||
       passedNurseryInfo?.name ||
       storedOrg?.name ||
-      "NurseryDesk",
+      "NurseryDesk Farms & Agro",
     phone:
+      invoice.organizationSnapshot?.phone ||
       invoice.organizationId?.phone ||
       passedNurseryInfo?.phone ||
       storedOrg?.phone ||
       "",
     email:
+      invoice.organizationSnapshot?.email ||
       invoice.organizationId?.email ||
       passedNurseryInfo?.email ||
       storedOrg?.email ||
       "",
     address:
+      invoice.organizationSnapshot?.address ||
       invoice.organizationId?.address ||
       passedNurseryInfo?.address ||
       storedOrg?.address ||
@@ -356,7 +552,12 @@ export default function ProfessionalInvoicePDF({
     if (!addr) return "";
     if (typeof addr === "string") return addr;
     if (typeof addr === "object") {
-      return [addr.street, addr.city, addr.state, addr.pincode]
+      return [
+        addr.street || addr.line1,
+        addr.city,
+        addr.state,
+        addr.pincode || addr.postalCode,
+      ]
         .filter(Boolean)
         .join(", ");
     }
@@ -365,11 +566,12 @@ export default function ProfessionalInvoicePDF({
 
   const isQuotation = invoice.documentType === "QUOTATION";
   const isCancelled = invoice.status === "CANCELLED";
-  const docTitle = isCancelled
+  const docBadgeTitle = isCancelled
     ? "CANCELLED"
     : isQuotation
-    ? "QUOTATION"
-    : "NON-GST INVOICE";
+      ? "QUOTATION ESTIMATE"
+      : "TAX BILL / INVOICE";
+
   const customerName =
     invoice.customerSnapshot?.name ||
     invoice.customerId?.name ||
@@ -380,74 +582,147 @@ export default function ProfessionalInvoicePDF({
   const nurseryAddress = formatAddress(nursery.address);
 
   return (
-    <Document title={`${invoice.invoiceNumber || "NurseryDesk-Invoice"}.pdf`}>
+    <Document title={`${invoice.invoiceNumber || "NurseryDesk-Bill"}.pdf`}>
       <Page size="A4" style={styles.page} wrap>
         {/* Cancelled Watermark Overlay */}
         {isCancelled && (
-          <View style={styles.watermarkWrapper} fixed>
-            <Text style={styles.watermarkText}>CANCELLED</Text>
+          <View style={styles.watermarkContainer} fixed>
+            <View style={styles.watermarkBox}>
+              <Text style={styles.watermarkText}>CANCELLED</Text>
+            </View>
           </View>
         )}
 
-        <View style={styles.header}>
+        {/* Top Decorative Forest & Gold Header Stripe */}
+        <View style={styles.topAccentBar} />
+        <View style={styles.topGoldStripe} />
+
+        {/* Header Section */}
+        <View style={styles.headerContainer}>
           <View style={styles.brandBlock}>
             <Text style={styles.brandTitle}>{nursery.name}</Text>
-          </View>
-
-          <View style={styles.documentBlock}>
-            <View style={styles.docBadge}>
-              <Text style={styles.docBadgeText}>{docTitle}</Text>
-            </View>
-            <Text style={styles.docNumber}>{invoice.invoiceNumber || "—"}</Text>
-            <Text style={styles.docMeta}>
-              {isQuotation ? "Quotation Date" : "Invoice Date"}: {date(invoice.invoiceDate || invoice.createdAt)}
+            <Text style={styles.brandTagline}>
+              Horticulture Plants • Farm Nursery & Landscaping
             </Text>
-            {invoice.dueDate ? (
-              <Text style={styles.docMeta}>
-                {isQuotation ? "Valid Until" : "Payment Due"}: {date(invoice.dueDate)}
+            {nursery.phone || nursery.email ? (
+              <Text style={styles.brandMetaRow}>
+                {[
+                  nursery.phone ? `Ph: ${nursery.phone}` : null,
+                  nursery.email ? `Email: ${nursery.email}` : null,
+                ]
+                  .filter(Boolean)
+                  .join("   •   ")}
               </Text>
             ) : null}
-            {invoice.branchName ? (
-              <Text style={styles.docMeta}>Branch: {invoice.branchName}</Text>
-            ) : null}
+          </View>
+
+          <View style={styles.docBlock}>
+            <View
+              style={[
+                styles.docBadge,
+                isCancelled
+                  ? { backgroundColor: C.danger, borderColor: C.danger }
+                  : {},
+              ]}
+            >
+              <Text style={styles.docBadgeText}>{docBadgeTitle}</Text>
+            </View>
+            <Text style={styles.docNumberText}>
+              {invoice.invoiceNumber || "—"}
+            </Text>
+
+            <View style={styles.metaGrid}>
+              <View style={styles.metaRow}>
+                <Text style={styles.metaLabel}>
+                  {isQuotation ? "Quotation Date:" : "Invoice Date:"}
+                </Text>
+                <Text style={styles.metaValue}>
+                  {date(invoice.invoiceDate || invoice.createdAt)}
+                </Text>
+              </View>
+              {invoice.dueDate ? (
+                <View style={styles.metaRow}>
+                  <Text style={styles.metaLabel}>
+                    {isQuotation ? "Valid Until:" : "Payment Due:"}
+                  </Text>
+                  <Text style={styles.metaValue}>{date(invoice.dueDate)}</Text>
+                </View>
+              ) : null}
+              {invoice.branchName || invoice.branchId?.name ? (
+                <View style={styles.metaRow}>
+                  <Text style={styles.metaLabel}>Dispatch Branch:</Text>
+                  <Text style={styles.metaValue}>
+                    {invoice.branchName || invoice.branchId?.name}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
           </View>
         </View>
 
+        {/* Billed To / Issued By Luxury Cards */}
         <View style={styles.partyGrid}>
-          <View style={styles.partyCol}>
-            <Text style={styles.sectionHeading}>Billed To</Text>
+          <View style={styles.partyCard}>
+            <View style={styles.partyHeaderRow}>
+              <View style={styles.goldDot} />
+              <Text style={styles.partyLabel}>Billed To / Consignee</Text>
+            </View>
             <Text style={styles.partyName}>{customerName}</Text>
             {invoice.customerSnapshot?.businessName ? (
-              <Text style={styles.partyDetail}>{invoice.customerSnapshot.businessName}</Text>
+              <Text style={styles.partyBusinessName}>
+                {invoice.customerSnapshot.businessName}
+              </Text>
             ) : null}
             {customerPhone ? (
-              <Text style={styles.partyDetail}>Phone: {customerPhone}</Text>
+              <Text style={styles.partyText}>Contact: {customerPhone}</Text>
             ) : null}
             {customerAddress ? (
-              <Text style={styles.partyDetail}>{customerAddress}</Text>
+              <Text style={styles.partyText}>{customerAddress}</Text>
             ) : null}
           </View>
-          <View style={styles.partyColRight}>
-            <Text style={styles.sectionHeading}>Issued By</Text>
-            <Text style={[styles.partyName, { fontFamily: "Times-Bold", fontSize: 11, color: C.forest }]}>
+
+          <View style={styles.partyCard}>
+            <View style={styles.partyHeaderRow}>
+              <View style={styles.goldDot} />
+              <Text style={styles.partyLabel}>
+                Issued By / Nursery Provider
+              </Text>
+            </View>
+            <Text style={[styles.partyName, { color: C.primary }]}>
               {nursery.name}
             </Text>
-            {nursery.phone ? <Text style={styles.partyDetail}>Phone: {nursery.phone}</Text> : null}
-            {nursery.email ? <Text style={styles.partyDetail}>Email: {nursery.email}</Text> : null}
-            {nurseryAddress ? <Text style={styles.partyDetail}>{nurseryAddress}</Text> : null}
-            {invoice.branchName ? <Text style={styles.partyDetail}>Branch: {invoice.branchName}</Text> : null}
+            {nursery.phone ? (
+              <Text style={styles.partyText}>Direct Line: {nursery.phone}</Text>
+            ) : null}
+            {nursery.email ? (
+              <Text style={styles.partyText}>Inquiries: {nursery.email}</Text>
+            ) : null}
+            {nurseryAddress ? (
+              <Text style={styles.partyText}>{nurseryAddress}</Text>
+            ) : null}
           </View>
         </View>
 
-        <Text style={styles.tableSectionTitle}>Plant Items & Specifications</Text>
-        <View style={styles.table}>
+        {/* Plant Items Table */}
+        <View style={styles.tableHeadingContainer}>
+          <View style={styles.goldDot} />
+          <Text style={styles.tableHeadingText}>
+            Plant Specifications & Itemized Bill
+          </Text>
+        </View>
+
+        <View style={styles.tableFrame}>
           <View style={styles.tableHeader}>
-            <Text style={[styles.colNo, styles.headerText]}>#</Text>
-            <Text style={[styles.colItem, styles.headerText]}>PLANT / DESCRIPTION</Text>
-            <Text style={[styles.colVariety, styles.headerText]}>VARIETY / SIZE</Text>
-            <Text style={[styles.colQty, styles.headerText]}>QTY</Text>
-            <Text style={[styles.colRate, styles.headerText]}>RATE (₹)</Text>
-            <Text style={[styles.colAmount, styles.headerText]}>AMOUNT (₹)</Text>
+            <Text style={[styles.colNo, styles.thText]}>#</Text>
+            <Text style={[styles.colItem, styles.thText]}>
+              Plant Name & Details
+            </Text>
+            <Text style={[styles.colVariety, styles.thText]}>
+              Variety / Specification
+            </Text>
+            <Text style={[styles.colQty, styles.thText]}>Quantity</Text>
+            <Text style={[styles.colRate, styles.thText]}>Rate (₹)</Text>
+            <Text style={[styles.colAmount, styles.thText]}>Amount (₹)</Text>
           </View>
 
           {invoice.items?.map((item, idx) => (
@@ -458,27 +733,38 @@ export default function ProfessionalInvoicePDF({
             >
               <Text style={styles.colNo}>{idx + 1}</Text>
               <View style={styles.colItem}>
-                <Text style={styles.itemTitle}>{item.plantName || item.description || "Plant item"}</Text>
+                <Text style={styles.itemTitle}>
+                  {item.plantName || item.description || "Plant item"}
+                </Text>
                 {item.description && item.description !== item.plantName ? (
                   <Text style={styles.itemSub}>{item.description}</Text>
                 ) : null}
               </View>
               <View style={styles.colVariety}>
-                <Text style={styles.cellText}>{item.variety || "—"}</Text>
-                {item.plantSize ? <Text style={styles.itemSub}>{item.plantSize}</Text> : null}
+                <Text style={styles.cellText}>
+                  {item.variety || "Standard"}
+                </Text>
+                {item.plantSize ? (
+                  <Text style={styles.itemSub}>Size: {item.plantSize}</Text>
+                ) : null}
               </View>
               <Text style={[styles.colQty, styles.cellText]}>
                 {item.quantity} {item.unitName || "PCS"}
               </Text>
-              <Text style={[styles.colRate, styles.cellText]}>{money(item.unitPrice)}</Text>
+              <Text style={[styles.colRate, styles.cellText]}>
+                {money(item.unitPrice)}
+              </Text>
               <Text style={styles.colAmount}>{money(item.lineTotal)}</Text>
             </View>
           ))}
         </View>
 
+        {/* Additional Charges / Freight Services */}
         {invoice.charges?.length > 0 ? (
-          <View style={styles.chargesSection}>
-            <Text style={styles.chargesHeader}>Additional Charges & Freight</Text>
+          <View style={styles.chargesBox}>
+            <Text style={styles.chargesHeader}>
+              Additional Services, Freight & Packing
+            </Text>
             {invoice.charges.map((charge, idx) => (
               <View
                 key={charge.id || `${charge.name || "charge"}-${idx}`}
@@ -486,63 +772,84 @@ export default function ProfessionalInvoicePDF({
                 wrap={false}
               >
                 <Text style={styles.chargeName}>
-                  {charge.name || "Additional charge"}
-                  {charge.description ? ` · ${charge.description}` : ""}
+                  • {charge.name || "Additional Service"}
+                  {charge.description ? ` (${charge.description})` : ""}
                 </Text>
-                <Text style={styles.chargeAmount}>{money(charge.amount)}</Text>
+                <Text style={styles.chargeAmount}>+{money(charge.amount)}</Text>
               </View>
             ))}
           </View>
         ) : null}
 
+        {/* Bottom Section: Notes & Summary Totals */}
         <View style={styles.bottomGrid}>
-          {invoice.notes ? (
-            <View style={styles.notesBox}>
-              <Text style={styles.notesTitle}>Notes & Delivery Instructions</Text>
-              <Text style={styles.notesContent}>{invoice.notes}</Text>
+          {invoice.notes && (
+            <View style={styles.notesCard}>
+              <Text style={styles.notesHeading}>
+                Delivery Notes & Client Instructions
+              </Text>
+              <Text style={styles.notesBody}>{invoice.notes}</Text>
+              <Text style={styles.paymentNotice}>
+                {isQuotation
+                  ? "Note: This quotation is an estimate. Rates and plant stock are subject to confirmation at the time of order placement."
+                  : "Thank you for your business. Please quote this invoice number for all account settlements."}
+              </Text>
             </View>
-          ) : (
-            <View style={{ width: "48%" }} />
           )}
 
-          <View style={styles.totalsBox}>
-            <View style={styles.totalLine}>
-              <Text>Plant Subtotal</Text>
-              <Text style={styles.totalValue}>{money(invoice.subtotal)}</Text>
+          <View style={styles.totalsCard}>
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Plant Subtotal</Text>
+              <Text style={styles.totalVal}>{money(invoice.subtotal)}</Text>
             </View>
+
             {Number(invoice.chargesTotal) > 0 ? (
-              <View style={styles.totalLine}>
-                <Text>Additional Charges</Text>
-                <Text style={styles.totalValue}>{money(invoice.chargesTotal)}</Text>
+              <View style={styles.totalRow}>
+                <Text style={styles.totalLabel}>Freight & Extra Charges</Text>
+                <Text style={[styles.totalVal, { color: C.primaryMedium }]}>
+                  +{money(invoice.chargesTotal)}
+                </Text>
               </View>
             ) : null}
+
             {Number(invoice.discountAmount) > 0 ? (
-              <View style={styles.totalLine}>
-                <Text>Discount</Text>
-                <Text style={[styles.totalValue, { color: "#B54747" }]}>
+              <View style={styles.totalRow}>
+                <Text style={styles.totalLabel}>Special Discount Applied</Text>
+                <Text style={styles.discountVal}>
                   -{money(invoice.discountAmount)}
                 </Text>
               </View>
             ) : null}
-            <View style={styles.grandTotalLine}>
+
+            <View style={styles.grandTotalRow}>
               <Text style={styles.grandTotalLabel}>Grand Total</Text>
-              <Text style={styles.grandTotalValue}>{money(invoice.grandTotal)}</Text>
+              <Text style={styles.grandTotalVal}>
+                {money(invoice.grandTotal)}
+              </Text>
             </View>
           </View>
         </View>
 
-        <View style={styles.signatureRow}>
-          <View style={styles.signatureBlock}>
-            <Text style={styles.signatureText}>Authorized Signature</Text>
+        {/* Authorized Signature Block */}
+        <View style={styles.signatureGrid}>
+          <View style={styles.signatureBox}>
+            <View style={styles.signatureLine} />
+            <Text style={styles.signatureSignatoryText}>
+              Authorized Signatory
+            </Text>
+            <Text style={styles.signatureFirmText}>For {nursery.name}</Text>
           </View>
         </View>
 
+        {/* Discreet Professional Footer */}
         <View style={styles.footer} fixed>
-          <Text style={styles.footerText}>Thank you for your business.</Text>
+          <Text style={styles.footerText}>
+            Generated via NurseryDesk Platform • Horticulture Management
+          </Text>
           <Text style={styles.footerText}>
             {isQuotation
-              ? "Quotation only · Subject to confirmation"
-              : "Computer-generated non-GST bill · No signature required if digitally issued"}
+              ? "Official Quotation • Not a Tax Invoice"
+              : "Computer Generated Invoice • Non-GST"}
           </Text>
         </View>
       </Page>

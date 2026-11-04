@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Invoice, DocumentSequence, Customer } from "../../models/index.js";
+import { Invoice, DocumentSequence, Customer, Organization, Branch } from "../../models/index.js";
 import { recordLedgerEntry } from "../../shared/ledger.service.js";
 
 const itemSchema = z.object({
@@ -137,7 +137,12 @@ export async function createInvoice(request, reply) {
 
   const isQuotation = documentType === "QUOTATION";
 
-  const customer = await Customer.findOne({ _id: customerId, organizationId: orgId });
+  const [customer, organization, branch] = await Promise.all([
+    Customer.findOne({ _id: customerId, organizationId: orgId }),
+    Organization.findById(orgId),
+    Branch.findOne({ _id: branchId, organizationId: orgId }),
+  ]);
+
   if (!customer) return reply.code(404).send({ success: false, message: "Customer not found" });
 
   const year = new Date().getFullYear();
@@ -201,6 +206,19 @@ export async function createInvoice(request, reply) {
       phone: customer.phone,
       address: customer.billingAddress,
     },
+    organizationSnapshot: organization ? {
+      name: organization.name,
+      phone: organization.phone,
+      email: organization.email,
+      address: organization.address,
+      logoUrl: organization.logoUrl,
+    } : null,
+    branchSnapshot: branch ? {
+      name: branch.name,
+      code: branch.code,
+      phone: branch.phone,
+      address: branch.address,
+    } : null,
     visibleColumns: visibleColumns || ["plantName", "plantSize", "quantity", "unitPrice", "lineTotal"],
     notes,
     items: sanitizedItems,
