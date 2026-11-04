@@ -8,10 +8,13 @@ import customerRoutes from "./modules/customers/customers.routes.js";
 import quotationRoutes from "./modules/quotations/quotations.routes.js";
 import invoiceRoutes from "./modules/invoices/invoices.routes.js";
 import paymentRoutes from "./modules/payments/payments.routes.js";
-import reportRoutes from "./modules/reports/reports.routes.js";
-import branchRoutes from "./modules/branches/branches.routes.js";
 import expenseRoutes from "./modules/expenses/expenses.routes.js";
 import chargeRoutes from "./modules/charges/charges.routes.js";
+import reportRoutes from "./modules/reports/reports.routes.js";
+import branchRoutes from "./modules/branches/branches.routes.js";
+import employeeRoutes from "./modules/employees/employees.routes.js";
+import customerLedgerRoutes from "./modules/ledger/ledger.routes.js";
+import customerPortalRoutes from "./modules/customer-portal/customer-portal.routes.js";
 import adminRoutes from "./modules/admin/admin.routes.js";
 
 export async function buildApp() {
@@ -24,15 +27,18 @@ export async function buildApp() {
   await registerSecurity(app);
   await app.register(mongoosePlugin);
 
-  // Expose root server and health check at http://localhost:3001/ and /health
+  // Root diagnostics & health
   await app.register(healthRoutes);
 
-  // Register API modules under /api/v1
+  // Register Business Modules under /api/v1
   await app.register(healthRoutes, { prefix: "/api/v1" });
   await app.register(authRoutes, { prefix: "/api/v1" });
   await app.register(branchRoutes, { prefix: "/api/v1" });
+  await app.register(employeeRoutes, { prefix: "/api/v1" });
   await app.register(productRoutes, { prefix: "/api/v1" });
   await app.register(customerRoutes, { prefix: "/api/v1" });
+  await app.register(customerLedgerRoutes, { prefix: "/api/v1" });
+  await app.register(customerPortalRoutes, { prefix: "/api/v1" });
   await app.register(quotationRoutes, { prefix: "/api/v1" });
   await app.register(invoiceRoutes, { prefix: "/api/v1" });
   await app.register(paymentRoutes, { prefix: "/api/v1" });

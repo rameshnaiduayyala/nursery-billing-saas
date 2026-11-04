@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { Payment, Invoice, DocumentSequence } from "../../models/index.js";
+import { Payment, Invoice, DocumentSequence, Customer } from "../../models/index.js";
+import { recordLedgerEntry } from "../../shared/ledger.service.js";
 
 const allocationSchema = z.object({
   invoiceId: z.string().min(1),
@@ -23,7 +24,12 @@ export default async function paymentRoutes(app) {
     const orgId = request.headers["x-organization-id"];
     if (!orgId) return reply.code(400).send({ success: false, message: "Organization ID is required" });
 
-    const payments = await Payment.find({ organizationId: orgId })
+    const { customerId, branchId } = request.query || {};
+    const filter = { organizationId: orgId };
+    if (customerId) filter.customerId = customerId;
+    if (branchId) filter.branchId = branchId;
+
+    const payments = await Payment.find(filter)
       .populate("customerId", "name businessName phone")
       .populate("branchId", "name code")
       .populate("allocations.invoiceId", "invoiceNumber grandTotal balanceDue")
@@ -32,7 +38,7 @@ export default async function paymentRoutes(app) {
     return reply.send({ success: true, data: payments });
   });
 
-  // Record Payment & update invoice balances
+  // Record Payment & Receipt with automatic Ledger credit
   app.post("/payments", async (request, reply) => {
     const orgId = request.headers["x-organization-id"];
     if (!orgId) return reply.code(400).send({ success: false, message: "Organization ID is required" });
@@ -43,6 +49,19 @@ export default async function paymentRoutes(app) {
     }
 
     const { branchId, customerId, amount, paymentMethod, reference, notes, allocations } = parsed.data;
+
+    // Validate customer exists
+    const customer = await Customer.findOne({ _id: customerId, organizationId: orgId });
+    if (!customer) return reply.code(404).send({ success: false, message: "Customer not found" });
+
+    // Validate allocation sums do not exceed received amount
+    const totalAllocated = allocations.reduce((sum, a) => sum + a.allocatedAmount, 0);
+    if (totalAllocated > amount) {
+      return reply.code(400).send({
+        success: false,
+        message: `Total invoice allocations (₹${totalAllocated}) cannot exceed received payment amount (₹${amount})`,
+      });
+    }
 
     // Sequence for Receipt / Payment Number
     const financialYear = "2026-27";
@@ -81,7 +100,43 @@ export default async function paymentRoutes(app) {
       }
     }
 
-    return reply.code(201).send({ success: true, data: payment });
+    // Record Credit in Customer Financial Ledger
+    const unallocated = amount - totalAllocated;
+    const desc = unallocated > 0
+      ? `Payment received #${paymentNumber} (${paymentMethod}) - ₹${totalAllocated} allocated, ₹${unallocated} advance balance`
+      : `Payment received #${paymentNumber} (${paymentMethod})`;
+
+    await recordLedgerEntry({
+      organizationId: orgId,
+      branchId,
+      customerId,
+      entryType: unallocated === amount ? "ADVANCE" : "PAYMENT",
+      transactionDate: payment.paymentDate,
+      referenceType: "PAYMENT",
+      referenceId: payment._id,
+      referenceNumber: payment.paymentNumber,
+      description: desc,
+      debitAmount: 0,
+      creditAmount: amount,
+    });
+
+    return reply.code(201).send({
+      success: true,
+      message: "Payment recorded and receipt generated successfully",
+      data: payment,
+    });
+  });
+
+  // Get printable receipt details
+  app.get("/receipts/:id", async (request, reply) => {
+    const orgId = request.headers["x-organization-id"];
+    const receipt = await Payment.findOne({ _id: request.params.id, organizationId: orgId })
+      .populate("customerId")
+      .populate("branchId")
+      .populate("organizationId", "name phone email address")
+      .populate("allocations.invoiceId", "invoiceNumber grandTotal invoiceDate");
+
+    if (!receipt) return reply.code(404).send({ success: false, message: "Receipt not found" });
+    return reply.send({ success: true, data: receipt });
   });
 }
-

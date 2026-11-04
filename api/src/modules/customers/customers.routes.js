@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Customer, Invoice, Payment } from "../../models/index.js";
+import { Customer } from "../../models/index.js";
 
 const customerSchema = z.object({
   customerCode: z.string().optional(),
@@ -16,7 +16,7 @@ const customerSchema = z.object({
 });
 
 export default async function customerRoutes(app) {
-  // List customers with financial summaries
+  // List customers
   app.get("/customers", async (request, reply) => {
     const orgId = request.headers["x-organization-id"];
     if (!orgId) return reply.code(400).send({ success: false, message: "Organization ID is required" });
@@ -46,37 +46,11 @@ export default async function customerRoutes(app) {
     return reply.code(201).send({ success: true, data: customer });
   });
 
-  // Customer Ledger (invoices, payments, outstanding summary)
-  app.get("/customers/:id/ledger", async (request, reply) => {
+  // Get Single Customer Profile
+  app.get("/customers/:id", async (request, reply) => {
     const orgId = request.headers["x-organization-id"];
-    const customerId = request.params.id;
-
-    const [customer, invoices, payments] = await Promise.all([
-      Customer.findOne({ _id: customerId, organizationId: orgId }),
-      Invoice.find({ customerId, organizationId: orgId }).sort({ invoiceDate: 1 }),
-      Payment.find({ customerId, organizationId: orgId }).sort({ paymentDate: 1 }),
-    ]);
-
+    const customer = await Customer.findOne({ _id: request.params.id, organizationId: orgId });
     if (!customer) return reply.code(404).send({ success: false, message: "Customer not found" });
-
-    const totalInvoiced = invoices.reduce((sum, inv) => sum + (inv.grandTotal || 0), 0);
-    const totalPaid = payments.reduce((sum, pay) => sum + (pay.amount || 0), 0);
-    const outstanding = customer.openingBalance + totalInvoiced - totalPaid;
-
-    return reply.send({
-      success: true,
-      data: {
-        customer,
-        summary: {
-          openingBalance: customer.openingBalance,
-          totalInvoiced,
-          totalPaid,
-          outstandingBalance: outstanding,
-        },
-        invoices,
-        payments,
-      },
-    });
+    return reply.send({ success: true, data: customer });
   });
 }
-
