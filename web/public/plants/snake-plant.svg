@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#E2EAE3"/>
+      <stop offset="100%" stop-color="#F5F7F1"/>
+    </radialGradient>
+    <linearGradient id="pot" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#123D2B"/>
+      <stop offset="100%" stop-color="#0B261B"/>
+    </linearGradient>
+    <linearGradient id="leafVar" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C6A76A"/>
+      <stop offset="35%" stop-color="#A8C9A5"/>
+      <stop offset="100%" stop-color="#176B45"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="400" height="400" rx="32" fill="url(#bg)"/>
+  <ellipse cx="200" cy="350" rx="75" ry="14" fill="#123D2B" opacity="0.12"/>
+
+  <!-- Modern Cylinder Pot -->
+  <rect x="150" y="260" width="100" height="85" rx="12" fill="url(#pot)"/>
+  <rect x="145" y="252" width="110" height="14" rx="5" fill="#C6A76A"/>
+
+  <!-- Upright Snake Plant Spear Leaves -->
+  <!-- Center Tall Leaf -->
+  <path d="M200 255 Q195 160 200 65 Q205 160 200 255 Z" fill="url(#leafVar)" stroke="#123D2B" stroke-width="2"/>
+  <!-- Left Spear -->
+  <path d="M185 255 Q160 180 170 95 Q185 180 185 255 Z" fill="url(#leafVar)" stroke="#123D2B" stroke-width="2"/>
+  <!-- Right Spear -->
+  <path d="M215 255 Q240 180 230 100 Q215 180 215 255 Z" fill="url(#leafVar)" stroke="#123D2B" stroke-width="2"/>
+  <!-- Outer Left -->
+  <path d="M172 255 Q140 210 150 145 Q170 210 172 255 Z" fill="url(#leafVar)" stroke="#123D2B" stroke-width="2"/>
+  <!-- Outer Right -->
+  <path d="M228 255 Q260 210 250 150 Q230 210 228 255 Z" fill="url(#leafVar)" stroke="#123D2B" stroke-width="2"/>
+
+  <!-- Gold Margin Borders (Sansevieria Laurentii characteristic) -->
+  <path d="M198 75 Q193 160 198 250" stroke="#C6A76A" stroke-width="3" stroke-linecap="round"/>
+  <path d="M168 105 Q158 180 182 250" stroke="#C6A76A" stroke-width="3" stroke-linecap="round"/>
+  <path d="M232 110 Q242 180 218 250" stroke="#C6A76A" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Plant Label Badge -->
+  <g transform="translate(100, 310)">
+    <rect width="200" height="32" rx="16" fill="#123D2B" opacity="0.95"/>
+    <text x="100" y="21" font-family="Inter, system-ui, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle">SNAKE PLANT</text>
+  </g>
+</svg>
+

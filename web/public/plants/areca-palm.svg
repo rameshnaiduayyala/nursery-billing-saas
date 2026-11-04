@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#E2EAE3"/>
+      <stop offset="100%" stop-color="#F5F7F1"/>
+    </radialGradient>
+    <linearGradient id="pot" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C6A76A"/>
+      <stop offset="100%" stop-color="#9A7A3B"/>
+    </linearGradient>
+    <linearGradient id="leaf1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#176B45"/>
+      <stop offset="100%" stop-color="#123D2B"/>
+    </linearGradient>
+    <linearGradient id="leaf2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A8C9A5"/>
+      <stop offset="100%" stop-color="#176B45"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="400" height="400" rx="32" fill="url(#bg)"/>
+  
+  <!-- Shadow -->
+  <ellipse cx="200" cy="350" rx="90" ry="16" fill="#123D2B" opacity="0.12"/>
+
+  <!-- Pot -->
+  <path d="M140 250 L155 340 H245 L260 250 Z" fill="url(#pot)"/>
+  <rect x="132" y="235" width="136" height="18" rx="6" fill="#C6A76A"/>
+
+  <!-- Stem & Palm fronds -->
+  <path d="M200 240 Q198 170 160 100" stroke="#123D2B" stroke-width="4" stroke-linecap="round"/>
+  <path d="M200 240 Q202 160 245 90" stroke="#123D2B" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M200 240 Q180 180 120 160" stroke="#123D2B" stroke-width="4" stroke-linecap="round"/>
+  <path d="M200 240 Q225 180 280 170" stroke="#123D2B" stroke-width="4" stroke-linecap="round"/>
+  <path d="M200 240 V70" stroke="#123D2B" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- Palm Leaf Clusters -->
+  <path d="M200 70 C190 40 210 40 200 70 Z" fill="url(#leaf1)"/>
+  <path d="M160 100 C130 80 145 110 160 100 Z" fill="url(#leaf2)"/>
+  <path d="M245 90 C275 75 265 105 245 90 Z" fill="url(#leaf1)"/>
+  <path d="M120 160 C90 145 105 175 120 160 Z" fill="url(#leaf2)"/>
+  <path d="M280 170 C310 160 295 190 280 170 Z" fill="url(#leaf1)"/>
+
+  <!-- Detailed Fronds -->
+  <path d="M195 120 Q160 110 140 130" stroke="#176B45" stroke-width="3" stroke-linecap="round"/>
+  <path d="M205 110 Q240 105 260 125" stroke="#176B45" stroke-width="3" stroke-linecap="round"/>
+  <path d="M198 150 Q165 145 135 165" stroke="#A8C9A5" stroke-width="3" stroke-linecap="round"/>
+  <path d="M202 140 Q245 140 268 158" stroke="#123D2B" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Plant Label Badge -->
+  <g transform="translate(100, 310)">
+    <rect width="200" height="32" rx="16" fill="#123D2B" opacity="0.95"/>
+    <text x="100" y="21" font-family="Inter, system-ui, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle">ARECA PALM</text>
+  </g>
+</svg>
+

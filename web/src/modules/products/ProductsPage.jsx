@@ -1,6 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { Plus, Search, Tag, DollarSign, Package, Loader2, AlertCircle } from "lucide-react";
 import { apiRequest } from "../../lib/api";
+import { plantAssets } from "../../assets";
+
+// Helper to match plant image or provide standard plant icon
+function getPlantImage(name = "") {
+  const lower = name.toLowerCase();
+  if (lower.includes("palm") || lower.includes("areca")) return plantAssets.arecaPalm;
+  if (lower.includes("snake") || lower.includes("sansevieria")) return plantAssets.snakePlant;
+  if (lower.includes("monstera") || lower.includes("philodendron")) return plantAssets.monstera;
+  if (lower.includes("pothos") || lower.includes("money")) return plantAssets.goldenPothos;
+  return plantAssets.monstera;
+}
 
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);
@@ -50,17 +61,17 @@ export default function ProductsPage() {
           plantVariety: formData.plantVariety || null,
           plantSize: formData.plantSize || null,
           unitId: formData.unitId || "PCS",
-          defaultRate: Number(formData.defaultRate) || 0,
+          defaultRate: parseFloat(formData.defaultRate) || 0,
         }),
       });
 
       if (res.success) {
         setShowModal(false);
         setFormData({ name: "", plantVariety: "", plantSize: "", unitId: "PCS", defaultRate: "" });
-        loadProducts();
+        await loadProducts();
       }
     } catch (err) {
-      alert("Error adding plant: " + err.message);
+      alert(err.message || "Failed to create plant item");
     } finally {
       setSubmitting(false);
     }
@@ -68,54 +79,53 @@ export default function ProductsPage() {
 
   const filtered = products.filter(
     (p) =>
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      (p.plantVariety && p.plantVariety.toLowerCase().includes(search.toLowerCase()))
+      p.name?.toLowerCase().includes(search.toLowerCase()) ||
+      p.plantVariety?.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Plant Catalog</h1>
-          <p className="text-sm text-slate-500">
-            Manage live plant varieties, pot/bag sizes, pricing, and master sales units connected to your API.
-          </p>
+          <h1 className="text-2xl font-bold tracking-tight text-[#1F2937]">Plant & Product Catalog</h1>
+          <p className="text-sm text-[#64748B]">Manage botanical varieties, bag sizes, and non-GST selling prices</p>
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="inline-flex items-center gap-2 rounded-xl bg-[#1b6840] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#155433] transition"
+          className="inline-flex items-center gap-2 rounded-xl bg-[#123D2B] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#176B45] transition cursor-pointer"
         >
-          <Plus size={18} /> Add Plant
+          <Plus size={16} /> Add Plant
         </button>
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 rounded-xl bg-amber-50 p-4 text-sm text-amber-800 border border-amber-200">
-          <AlertCircle size={18} className="shrink-0" />
-          <span>{error}. Displaying local database or fallback data.</span>
+        <div className="flex items-center gap-2 rounded-xl bg-red-50 p-4 text-sm text-red-700">
+          <AlertCircle size={18} /> {error}
         </div>
       )}
 
-      <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5 shadow-sm">
-        <Search size={18} className="text-slate-400" />
+      {/* Search Input */}
+      <div className="relative max-w-md">
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B]" size={18} />
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by plant name, botanical variety or category..."
-          className="w-full bg-transparent text-sm text-slate-800 focus:outline-none"
+          placeholder="Search plants by botanical name or variety..."
+          className="w-full rounded-xl border border-[#E2EAE3] bg-white py-2.5 pl-10 pr-4 text-sm text-[#1F2937] placeholder-[#64748B] focus:border-[#176B45] focus:outline-none"
         />
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      {/* Catalog Table */}
+      <div className="overflow-hidden rounded-2xl border border-[#E2EAE3] bg-white shadow-sm">
         {loading ? (
-          <div className="flex flex-col items-center justify-center p-12 text-slate-500">
-            <Loader2 size={32} className="animate-spin text-emerald-700 mb-2" />
+          <div className="flex flex-col items-center justify-center p-12 text-[#64748B]">
+            <Loader2 size={32} className="animate-spin text-[#176B45] mb-2" />
             <span className="text-sm">Fetching plant catalog from server...</span>
           </div>
         ) : (
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-100 bg-slate-50/75 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <thead className="border-b border-[#E2EAE3] bg-[#F5F7F1]/75 text-xs font-semibold text-[#64748B] uppercase tracking-wider">
               <tr>
                 <th className="px-6 py-4">Plant & Variety</th>
                 <th className="px-6 py-4">Size / Spec</th>
@@ -124,36 +134,38 @@ export default function ProductsPage() {
                 <th className="px-6 py-4 text-right">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[#E2EAE3]">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-10 text-center text-slate-400">
+                  <td colSpan={5} className="px-6 py-10 text-center text-[#64748B]">
                     No plants found. Click "Add Plant" to register your first catalog item.
                   </td>
                 </tr>
               ) : (
                 filtered.map((p) => (
-                  <tr key={p._id || p.id} className="hover:bg-slate-50/50 transition">
-                    <td className="px-6 py-4 font-medium text-slate-900">
+                  <tr key={p._id || p.id} className="hover:bg-[#F5F7F1]/50 transition">
+                    <td className="px-6 py-4 font-medium text-[#1F2937]">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
-                          <Package size={18} />
-                        </div>
+                        <img
+                          src={getPlantImage(p.name)}
+                          alt={p.name}
+                          className="h-10 w-10 shrink-0 rounded-xl border border-[#E2EAE3] object-cover bg-[#F5F7F1]"
+                        />
                         <div>
-                          <div>{p.name}</div>
-                          <div className="text-xs text-slate-400 font-normal">
+                          <div className="font-bold text-[#1F2937]">{p.name}</div>
+                          <div className="text-xs text-[#64748B] font-normal">
                             {p.plantVariety || "Standard variety"}
                           </div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-slate-600">{p.plantSize || "—"}</td>
-                    <td className="px-6 py-4 text-slate-600">{p.unitId?.name || p.unitId?.code || p.unitId || "PCS"}</td>
-                    <td className="px-6 py-4 font-semibold text-slate-900">
+                    <td className="px-6 py-4 text-[#64748B]">{p.plantSize || "—"}</td>
+                    <td className="px-6 py-4 text-[#64748B]">{p.unitId?.name || p.unitId?.code || p.unitId || "PCS"}</td>
+                    <td className="px-6 py-4 font-semibold text-[#1F2937]">
                       ₹{Number(p.defaultRate || 0).toLocaleString("en-IN")}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
+                      <span className="inline-flex items-center rounded-md bg-[#176B45]/10 px-2.5 py-0.5 text-xs font-medium text-[#176B45]">
                         Active
                       </span>
                     </td>
@@ -165,83 +177,88 @@ export default function ProductsPage() {
         )}
       </div>
 
+      {/* Modal for Adding New Plant */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
-            <h2 className="text-lg font-bold text-slate-900">Add New Plant to Catalog</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#123D2B]/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-[#E2EAE3]">
+            <h2 className="text-lg font-bold text-[#1F2937]">Add Plant to Catalog</h2>
             <form onSubmit={handleAdd} className="mt-4 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-600 uppercase">Plant Name</label>
+                <label className="text-xs font-semibold uppercase text-[#64748B]">Botanical / Plant Name</label>
                 <input
                   required
-                  type="text"
-                  placeholder="e.g. Golden Pothos / Money Plant"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="mt-1 w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-emerald-600 focus:outline-none"
+                  placeholder="e.g. Areca Palm (Dypsis lutescens)"
+                  className="mt-1 w-full rounded-xl border border-[#E2EAE3] px-3 py-2 text-sm focus:border-[#176B45] focus:outline-none"
                 />
               </div>
+
               <div>
-                <label className="block text-xs font-semibold text-slate-600 uppercase">Variety / Species</label>
+                <label className="text-xs font-semibold uppercase text-[#64748B]">Variety / Cultivar</label>
                 <input
-                  type="text"
-                  placeholder="e.g. Epipremnum aureum"
                   value={formData.plantVariety}
                   onChange={(e) => setFormData({ ...formData, plantVariety: e.target.value })}
-                  className="mt-1 w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-emerald-600 focus:outline-none"
+                  placeholder="e.g. Golden Cane, Bushy, Dwarf"
+                  className="mt-1 w-full rounded-xl border border-[#E2EAE3] px-3 py-2 text-sm focus:border-[#176B45] focus:outline-none"
                 />
               </div>
-              <div className="grid grid-cols-3 gap-3">
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 uppercase">Size / Pot</label>
+                  <label className="text-xs font-semibold uppercase text-[#64748B]">Size / Container</label>
                   <input
-                    type="text"
-                    placeholder="e.g. 5-inch pot"
                     value={formData.plantSize}
                     onChange={(e) => setFormData({ ...formData, plantSize: e.target.value })}
-                    className="mt-1 w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-emerald-600 focus:outline-none"
+                    placeholder="e.g. 10 inch bag, 5ft"
+                    className="mt-1 w-full rounded-xl border border-[#E2EAE3] px-3 py-2 text-sm focus:border-[#176B45] focus:outline-none"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 uppercase">Unit</label>
+                  <label className="text-xs font-semibold uppercase text-[#64748B]">Unit</label>
                   <select
                     value={formData.unitId}
                     onChange={(e) => setFormData({ ...formData, unitId: e.target.value })}
-                    className="mt-1 w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-emerald-600 focus:outline-none bg-white"
+                    className="mt-1 w-full rounded-xl border border-[#E2EAE3] px-3 py-2 text-sm focus:border-[#176B45] focus:outline-none"
                   >
-                    <option value="PCS">Piece</option>
+                    <option value="PCS">Piece (PCS)</option>
                     <option value="POT">Pot</option>
-                    <option value="BAG">Bag</option>
-                    <option value="BDL">Bundle</option>
-                    <option value="KG">Kilogram</option>
+                    <option value="BAG">Polybag</option>
+                    <option value="BUNDLE">Bundle</option>
+                    <option value="TRAY">Seedling Tray</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 uppercase">Rate (₹)</label>
-                  <input
-                    required
-                    type="number"
-                    placeholder="0.00"
-                    value={formData.defaultRate}
-                    onChange={(e) => setFormData({ ...formData, defaultRate: e.target.value })}
-                    className="mt-1 w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-emerald-600 focus:outline-none"
-                  />
-                </div>
               </div>
+
+              <div>
+                <label className="text-xs font-semibold uppercase text-[#64748B]">Selling Rate (₹)</label>
+                <input
+                  required
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={formData.defaultRate}
+                  onChange={(e) => setFormData({ ...formData, defaultRate: e.target.value })}
+                  placeholder="e.g. 350"
+                  className="mt-1 w-full rounded-xl border border-[#E2EAE3] px-3 py-2 text-sm focus:border-[#176B45] focus:outline-none"
+                />
+              </div>
+
               <div className="mt-6 flex justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                  className="rounded-xl px-4 py-2 text-sm font-semibold text-[#64748B] hover:bg-[#F5F7F1]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-xl bg-[#1b6840] px-5 py-2 text-sm font-semibold text-white hover:bg-[#155433] disabled:opacity-50"
+                  className="rounded-xl bg-[#123D2B] px-4 py-2 text-sm font-semibold text-white hover:bg-[#176B45] disabled:opacity-50"
                 >
-                  {submitting ? "Saving..." : "Save Plant"}
+                  {submitting ? "Saving..." : "Add to Catalog"}
                 </button>
               </div>
             </form>
@@ -251,4 +268,3 @@ export default function ProductsPage() {
     </div>
   );
 }
-

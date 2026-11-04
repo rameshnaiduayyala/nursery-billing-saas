@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#E2EAE3"/>
+      <stop offset="100%" stop-color="#F5F7F1"/>
+    </radialGradient>
+    <linearGradient id="pot" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#176B45"/>
+      <stop offset="100%" stop-color="#123D2B"/>
+    </linearGradient>
+    <linearGradient id="leafVar" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C6A76A"/>
+      <stop offset="50%" stop-color="#A8C9A5"/>
+      <stop offset="100%" stop-color="#176B45"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="400" height="400" rx="32" fill="url(#bg)"/>
+  <ellipse cx="200" cy="350" rx="75" ry="14" fill="#123D2B" opacity="0.12"/>
+
+  <!-- Hanging / Elevated Modern Planter -->
+  <path d="M150 255 L160 330 H240 L250 255 Z" fill="url(#pot)"/>
+  <rect x="142" y="245" width="116" height="14" rx="5" fill="#C6A76A"/>
+
+  <!-- Trailing Vines with Heart-shaped Leaves -->
+  <!-- Center Main Vine -->
+  <path d="M200 250 Q180 180 200 120 Q220 80 200 50" stroke="#123D2B" stroke-width="3.5" fill="none"/>
+  <!-- Left Vine -->
+  <path d="M190 250 Q150 220 130 160 Q110 110 140 80" stroke="#123D2B" stroke-width="3" fill="none"/>
+  <!-- Right Vine -->
+  <path d="M210 250 Q250 210 260 150 Q270 100 240 70" stroke="#123D2B" stroke-width="3" fill="none"/>
+
+  <!-- Golden Pothos Heart Leaves with variegated streaks -->
+  <path d="M200 50 C185 30 170 60 200 80 C230 60 215 30 200 50 Z" fill="url(#leafVar)"/>
+  <path d="M140 80 C125 60 110 90 140 110 C170 90 155 60 140 80 Z" fill="url(#leafVar)"/>
+  <path d="M240 70 C225 50 210 80 240 100 C270 80 255 50 240 70 Z" fill="url(#leafVar)"/>
+  <path d="M130 160 C115 140 100 170 130 190 C160 170 145 140 130 160 Z" fill="url(#leafVar)"/>
+  <path d="M260 150 C245 130 230 160 260 180 C290 160 275 130 260 150 Z" fill="url(#leafVar)"/>
+  <path d="M190 140 C175 120 160 150 190 170 C220 150 205 120 190 140 Z" fill="url(#leafVar)"/>
+  <path d="M210 195 C195 175 180 205 210 225 C240 205 225 175 210 195 Z" fill="url(#leafVar)"/>
+
+  <!-- Plant Label Badge -->
+  <g transform="translate(100, 310)">
+    <rect width="200" height="32" rx="16" fill="#123D2B" opacity="0.95"/>
+    <text x="100" y="21" font-family="Inter, system-ui, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle">GOLDEN POTHOS</text>
+  </g>
+</svg>
+

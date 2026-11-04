@@ -180,17 +180,19 @@ export default function RoleBasedLayout() {
     : "NO";
 
   return (
-    <div className="min-h-screen bg-[#f6f8f6] md:flex">
-      <aside className="hidden w-64 shrink-0 border-r border-slate-200 bg-white md:flex md:flex-col">
-        <div className="flex h-20 items-center gap-3 border-b border-slate-100 px-6">
-          <div className="rounded-xl bg-[#e8f4eb] p-2 text-[#1f6b43]">
+    <div className="min-h-screen bg-[#F5F7F1] text-[#1F2937] md:flex">
+      {/* Sidebar */}
+      <aside className="hidden w-64 shrink-0 border-r border-[#E2EAE3] bg-white md:flex md:flex-col">
+        {/* Brand header */}
+        <div className="flex h-20 items-center gap-3 border-b border-[#E2EAE3] px-6">
+          <div className="rounded-xl bg-[#123D2B] p-2 text-white">
             <Sprout size={24} />
           </div>
           <div>
-            <div className="font-bold tracking-tight text-slate-900">NurseryOS</div>
-            <div className="text-xs text-slate-500 font-medium">
+            <div className="font-bold tracking-tight text-[#123D2B] text-lg">NurseryOS</div>
+            <div className="text-xs text-[#64748B] font-medium">
               {isSuperAdmin
-                ? "Super Admin"
+                ? "Platform Admin"
                 : role === "CUSTOMER"
                 ? "Customer Portal"
                 : `${role.replace("_", " ")}`}
@@ -200,25 +202,26 @@ export default function RoleBasedLayout() {
 
         {/* Nursery switcher is ONLY shown for nursery tenants */}
         {!isSuperAdmin && role !== "CUSTOMER" && (
-          <div className="border-b border-slate-100 p-4">
-            <div className="flex w-full items-center gap-3 rounded-xl border border-slate-200 p-3 bg-slate-50/50">
-              <div className="rounded-lg bg-emerald-50 p-2 text-emerald-700">
+          <div className="border-b border-[#E2EAE3] p-4">
+            <div className="flex w-full items-center gap-3 rounded-xl border border-[#E2EAE3] p-3 bg-[#F5F7F1]">
+              <div className="rounded-lg bg-[#A8C9A5]/30 p-2 text-[#123D2B]">
                 <Leaf size={18} />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-semibold text-slate-800">
+                <div className="truncate text-sm font-semibold text-[#1F2937]">
                   {user?.organization?.name || "Greenfield Nursery"}
                 </div>
-                <div className="text-xs text-slate-500">Active Organization</div>
+                <div className="text-xs text-[#64748B]">Active Organization</div>
               </div>
             </div>
           </div>
         )}
 
+        {/* Navigation list */}
         <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-5">
           {navigation.map((group) => (
             <div key={group.label}>
-              <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[.16em] text-slate-400">
+              <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[.16em] text-[#64748B]">
                 {group.label}
               </p>
               <div className="space-y-1">
@@ -229,10 +232,10 @@ export default function RoleBasedLayout() {
                       key={item.to}
                       to={item.to}
                       className={({ isActive }) =>
-                        `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
+                        `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
                           isActive
-                            ? "bg-[#eaf4ed] text-[#1b6840] font-semibold"
-                            : "text-slate-600 hover:bg-slate-50"
+                            ? "bg-[#123D2B] text-white font-semibold shadow-sm"
+                            : "text-[#1F2937] hover:bg-[#F5F7F1] hover:text-[#123D2B]"
                         }`
                       }
                     >
@@ -246,17 +249,18 @@ export default function RoleBasedLayout() {
           ))}
         </nav>
 
-        <div className="border-t border-slate-100 p-4">
-          <div className="flex items-center justify-between rounded-xl bg-slate-50 p-3">
+        {/* User footer badge */}
+        <div className="border-t border-[#E2EAE3] p-4">
+          <div className="flex items-center justify-between rounded-xl bg-[#F5F7F1] p-3 border border-[#E2EAE3]">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#dceee2] text-sm font-bold text-[#1f6b43]">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#123D2B] text-sm font-bold text-[#C6A76A]">
                 {initials}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-semibold text-slate-900">
+                <div className="truncate text-sm font-semibold text-[#1F2937]">
                   {user?.name || (isSuperAdmin ? "Super Admin" : "User")}
                 </div>
-                <div className="truncate text-xs text-slate-500">
+                <div className="truncate text-xs text-[#64748B]">
                   {user?.email || "user@nursery.com"}
                 </div>
               </div>
@@ -264,7 +268,7 @@ export default function RoleBasedLayout() {
             <button
               onClick={handleLogout}
               title="Sign out"
-              className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg transition"
+              className="p-1.5 text-[#64748B] hover:text-rose-600 rounded-lg transition cursor-pointer"
             >
               <LogOut size={16} />
             </button>
@@ -272,34 +276,37 @@ export default function RoleBasedLayout() {
         </div>
       </aside>
 
+      {/* Main content body */}
       <main className="min-w-0 flex-1">
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-slate-200 bg-white/90 px-4 backdrop-blur md:px-8">
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-[#E2EAE3] bg-white/95 px-4 backdrop-blur md:px-8">
           <div className="flex items-center gap-3">
-            <div className="text-sm text-slate-500">
-              Role: <span className="font-semibold text-slate-800">{isSuperAdmin ? "Global Super Admin" : role}</span>
+            <div className="text-sm text-[#64748B]">
+              Role:{" "}
+              <span className="font-semibold text-[#123D2B]">
+                {isSuperAdmin ? "Global Super Admin" : role}
+              </span>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <NavLink
               to="/notifications"
-              className="relative rounded-lg p-2 text-slate-500 hover:bg-slate-100"
+              className="relative rounded-xl border border-[#E2EAE3] p-2 text-[#64748B] hover:bg-[#F5F7F1] hover:text-[#123D2B] transition"
               title="Notifications"
             >
-              <Bell size={19} />
+              <Bell size={18} />
             </NavLink>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 border border-slate-200 rounded-lg px-2.5 py-1.5 hover:bg-slate-50 transition"
+              className="flex items-center gap-1.5 text-xs font-semibold text-[#1F2937] border border-[#E2EAE3] rounded-xl px-3 py-2 bg-white hover:bg-[#F5F7F1] transition cursor-pointer"
             >
               <LogOut size={14} /> Logout
             </button>
           </div>
         </header>
-        <div className="p-4 md:p-8">
+        <div className="p-4 md:p-8 bg-[#F5F7F1]">
           <Outlet />
         </div>
       </main>
     </div>
   );
 }
-
