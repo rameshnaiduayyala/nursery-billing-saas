@@ -31,6 +31,7 @@ export default function InvoiceForm({
   const [documentType, setDocumentType] = useState(
     initialData?.documentType || initialDocumentType || "INVOICE"
   );
+  const [invoiceNumber, setInvoiceNumber] = useState(initialData?.invoiceNumber || "");
   const [selectedCustomerId, setSelectedCustomerId] = useState(
     initialData?.customerId?._id || initialData?.customerId || ""
   );
@@ -128,6 +129,32 @@ export default function InvoiceForm({
       }
     }
   }, [branches, selectedBranchId]);
+
+  // Auto-fetch suggested sequential invoice/quotation number if empty
+  useEffect(() => {
+    if (initialData?.invoiceNumber) return; // Keep existing number on edit
+    if (!selectedBranchId) return;
+
+    let isMounted = true;
+    const fetchNextNumber = async () => {
+      try {
+        const { apiRequest } = await import("../../../lib/api");
+        const res = await apiRequest(
+          `/invoices/next-number?branchId=${selectedBranchId}&documentType=${documentType}`
+        );
+        if (isMounted && res.success && res.data?.suggestedNumber) {
+          setInvoiceNumber(res.data.suggestedNumber);
+        }
+      } catch (err) {
+        // Fallback gracefully
+      }
+    };
+
+    fetchNextNumber();
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedBranchId, documentType, initialData]);
 
   // Toggle dynamic column visibility
   const toggleColumn = (key) => {
@@ -245,6 +272,7 @@ export default function InvoiceForm({
 
     onSubmit({
       documentType,
+      invoiceNumber: invoiceNumber.trim() || undefined,
       customerId: selectedCustomerId,
       branchId: selectedBranchId,
       invoiceDate,
@@ -347,8 +375,11 @@ export default function InvoiceForm({
           </div>
         </div>
 
-        {/* Customer, Branch, Dates */}
+        {/* Customer, Branch, Dates, and Invoice Number */}
         <InvoiceMetaFields
+          documentType={documentType}
+          invoiceNumber={invoiceNumber}
+          setInvoiceNumber={setInvoiceNumber}
           customers={customers}
           branches={branches}
           selectedCustomerId={selectedCustomerId}

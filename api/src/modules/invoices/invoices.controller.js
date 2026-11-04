@@ -25,6 +25,7 @@ const chargeSchema = z.object({
 
 const invoiceCreateSchema = z.object({
   documentType: z.enum(["INVOICE", "QUOTATION"]).default("INVOICE"),
+  invoiceNumber: z.string().optional(),
   branchId: z.string().min(1),
   customerId: z.string().min(1),
   invoiceDate: z.string().optional(),
@@ -35,6 +36,43 @@ const invoiceCreateSchema = z.object({
   visibleColumns: z.array(z.string()).optional(),
   notes: z.string().optional().nullable(),
 });
+
+export async function getNextInvoiceNumber(request, reply) {
+  const orgId = request.headers["x-organization-id"];
+  if (!orgId) return reply.code(400).send({ success: false, message: "Organization ID is required" });
+
+  const { branchId, documentType = "INVOICE" } = request.query || {};
+  if (!branchId) return reply.code(400).send({ success: false, message: "Branch ID is required" });
+
+  const isQuotation = documentType === "QUOTATION";
+  const docSeqType = isQuotation ? "QUOTATION" : "INVOICE";
+  const docPrefix = isQuotation ? "QTN" : "INV";
+
+  const year = new Date().getFullYear();
+  const financialYear = `${year}-${year + 1}`;
+
+  const seq = await DocumentSequence.findOne({
+    organizationId: orgId,
+    branchId,
+    documentType: docSeqType,
+    financialYear,
+  });
+
+  const nextNum = seq ? (seq.nextNumber || 1) + 1 : 1;
+  const prefix = seq?.prefix || docPrefix;
+  const suggestedNumber = `${prefix}-${financialYear}-${String(nextNum).padStart(4, "0")}`;
+
+  return reply.send({
+    success: true,
+    data: {
+      documentType,
+      suggestedNumber,
+      prefix,
+      financialYear,
+      nextSequence: nextNum,
+    },
+  });
+}
 
 export async function listInvoices(request, reply) {
   const orgId = request.headers["x-organization-id"];
@@ -84,6 +122,7 @@ export async function createInvoice(request, reply) {
 
   const {
     documentType = "INVOICE",
+    invoiceNumber: customInvoiceNumber,
     branchId,
     customerId,
     invoiceDate,
@@ -113,7 +152,23 @@ export async function createInvoice(request, reply) {
     { upsert: true, new: true }
   );
 
-  const invoiceNumber = `${seq.prefix || docPrefix}-${financialYear}-${String(seq.nextNumber).padStart(4, "0")}`;
+  const finalInvoiceNumber =
+    customInvoiceNumber && customInvoiceNumber.trim() !== ""
+      ? customInvoiceNumber.trim()
+      : `${seq.prefix || docPrefix}-${financialYear}-${String(seq.nextNumber).padStart(4, "0")}`;
+
+  // Check if invoice number is already taken in this organization & branch
+  const existingDoc = await Invoice.findOne({
+    organizationId: orgId,
+    branchId,
+    invoiceNumber: finalInvoiceNumber,
+  });
+  if (existingDoc) {
+    return reply.code(409).send({
+      success: false,
+      message: `${isQuotation ? "Quotation" : "Invoice"} number "${finalInvoiceNumber}" already exists in this branch. Please choose a different number.`,
+    });
+  }
 
   const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
   const chargesTotal = (charges || []).reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
@@ -129,7 +184,7 @@ export async function createInvoice(request, reply) {
     branchId,
     customerId,
     documentType,
-    invoiceNumber,
+    invoiceNumber: finalInvoiceNumber,
     status: isQuotation ? "SENT" : "ISSUED",
     invoiceDate: invoiceDate ? new Date(invoiceDate) : new Date(),
     dueDate: dueDate ? new Date(dueDate) : null,
@@ -168,7 +223,7 @@ export async function createInvoice(request, reply) {
         credit: 0,
         referenceType: "INVOICE",
         referenceId: invoice._id.toString(),
-        description: `Non-GST Invoice issued: ${invoiceNumber}`,
+        description: `Non-GST Invoice issued: ${finalInvoiceNumber}`,
       });
     } catch (err) {
       // Non-blocking
@@ -178,8 +233,8 @@ export async function createInvoice(request, reply) {
   return reply.code(201).send({
     success: true,
     message: isQuotation
-      ? `Quotation ${invoiceNumber} created (not posted to customer balance)`
-      : `Invoice ${invoiceNumber} created and posted to customer ledger`,
+      ? `Quotation ${finalInvoiceNumber} created (not posted to customer balance)`
+      : `Invoice ${finalInvoiceNumber} created and posted to customer ledger`,
     data: invoice,
   });
 }

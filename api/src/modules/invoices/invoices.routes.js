@@ -1,6 +1,7 @@
 import {
   listInvoices,
   getInvoiceById,
+  getNextInvoiceNumber,
   createInvoice,
   updateInvoice,
   cancelInvoice,
@@ -10,6 +11,7 @@ import {
 
 export default async function invoiceRoutes(app) {
   app.get("/invoices", listInvoices);
+  app.get("/invoices/next-number", getNextInvoiceNumber);
   app.get("/invoices/:id", getInvoiceById);
   app.post("/invoices", createInvoice);
   app.put("/invoices/:id", updateInvoice);
