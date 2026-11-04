@@ -59,14 +59,18 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [isPendingApproval, setIsPendingApproval] = useState(false);
+
   const handleQuickLogin = (email, password) => {
     setFormData({ email, password });
     setError("");
+    setIsPendingApproval(false);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setIsPendingApproval(false);
     setLoading(true);
 
     try {
@@ -92,6 +96,9 @@ export function LoginPage() {
         }
       }
     } catch (err) {
+      if (err.message && err.message.includes("pending approval")) {
+        setIsPendingApproval(true);
+      }
       setError(err.message || "Failed to sign in. Please verify your email and password.");
     } finally {
       setLoading(false);
@@ -100,12 +107,24 @@ export function LoginPage() {
 
   return (
     <AuthShell title="Welcome Back" subtitle="Sign in to manage your nursery business and sales.">
-      {error && (
+      {isPendingApproval ? (
+        <div className="mb-5 rounded-2xl border border-amber-200 bg-amber-50/90 p-4 text-amber-900 shadow-sm">
+          <div className="flex items-start gap-3">
+            <ShieldCheck size={20} className="shrink-0 text-amber-600 mt-0.5" />
+            <div>
+              <h4 className="font-bold text-sm text-amber-950">Registration Pending Super Admin Verification</h4>
+              <p className="mt-1 text-xs text-amber-800 leading-relaxed">
+                Your nursery business registration has been received and is currently under review by the platform Super Admin. Once approved, you will be able to sign in and access all business features.
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : error ? (
         <div className="mb-5 flex items-center gap-2 rounded-xl bg-red-50 p-3.5 text-sm text-red-700 border border-red-100">
           <AlertCircle size={17} className="shrink-0" />
           <span>{error}</span>
         </div>
-      )}
+      ) : null}
 
       {/* Quick Login Icons */}
       <div className="mb-6 rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5">
@@ -245,20 +264,26 @@ export function RegisterPage() {
     >
       {registeredSuccess ? (
         <div className="space-y-5 text-center py-4">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-            <CheckCircle2 size={32} />
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-amber-800">
+            <ShieldCheck size={32} />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-slate-900">Registration Complete!</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Your business workspace <strong>{formData.businessName}</strong> and default main branch have been created successfully.
+            <span className="inline-flex items-center rounded-md bg-amber-100 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-amber-900 mb-2">
+              Status: Pending Admin Approval
+            </span>
+            <h2 className="text-xl font-bold text-slate-900">Registration Submitted Successfully!</h2>
+            <p className="mt-2 text-sm text-slate-600 max-w-sm mx-auto">
+              Your nursery <strong>{formData.businessName}</strong> has been registered on the platform and placed in <strong>Pending Approval</strong> status.
+            </p>
+            <p className="mt-2 text-xs text-slate-400 max-w-xs mx-auto">
+              A platform Super Admin will verify your nursery details and approve access. You can sign in once approval is granted.
             </p>
           </div>
           <button
             onClick={() => navigate("/")}
             className="w-full rounded-xl bg-[#1b6840] py-3 text-sm font-bold text-white shadow-md hover:bg-[#155433]"
           >
-            Continue to Sign in
+            Return to Sign in
           </button>
         </div>
       ) : (

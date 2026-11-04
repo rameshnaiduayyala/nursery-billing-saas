@@ -1,6 +1,6 @@
 import { z } from "zod";
 import bcrypt from "bcryptjs";
-import { User, Organization, Branch, Role, Membership } from "../../models/index.js";
+import { User, Organization, Branch, Role, Membership, Notification } from "../../models/index.js";
 
 const registerSchema = z.object({
   businessName: z.string().min(2),
@@ -39,7 +39,7 @@ export async function register(request, reply) {
 
   const passwordHash = await bcrypt.hash(password, 10);
 
-  // Create User
+  // 1. Create User
   const user = await User.create({
     name: ownerName,
     email,
@@ -49,17 +49,17 @@ export async function register(request, reply) {
     isActive: true,
   });
 
-  // Create Organization (Status APPROVED for immediate usability)
+  // 2. Create Organization in PENDING status (requires platform Super Admin verification & approval)
   const organization = await Organization.create({
     name: businessName,
     slug,
-    status: "APPROVED",
+    status: "PENDING",
     phone,
     email,
     address: { city, state, pincode },
   });
 
-  // Create Default Main Branch
+  // 3. Create Default Main Branch
   const branch = await Branch.create({
     organizationId: organization._id,
     name: "Main Branch",
@@ -69,7 +69,7 @@ export async function register(request, reply) {
     isActive: true,
   });
 
-  // Create Default Roles
+  // 4. Create Default Owner Role
   const ownerRole = await Role.create({
     organizationId: organization._id,
     name: "Owner",
@@ -78,7 +78,7 @@ export async function register(request, reply) {
     permissions: ["*"],
   });
 
-  // Create Membership
+  // 5. Create Membership
   const membership = await Membership.create({
     userId: user._id,
     organizationId: organization._id,
@@ -87,13 +87,31 @@ export async function register(request, reply) {
     branchAccess: [{ branchId: branch._id, isDefault: true }],
   });
 
+  // 6. Record System notification for registration
+  try {
+    await Notification.create({
+      organizationId: organization._id,
+      userId: user._id,
+      title: "Registration Submitted",
+      message: `Your nursery "${businessName}" registration has been submitted and is currently PENDING approval by platform administration.`,
+      type: "APPROVAL",
+    });
+  } catch (err) {
+    // Non-blocking log
+  }
+
   return reply.code(201).send({
     success: true,
-    message: "Nursery business registered successfully.",
+    message: "Nursery registered successfully. Status is Pending Admin Approval.",
     data: {
       userId: user._id,
       user: { name: user.name, email: user.email },
-      organization: { id: organization._id, name: organization.name, slug: organization.slug, status: organization.status },
+      organization: {
+        id: organization._id,
+        name: organization.name,
+        slug: organization.slug,
+        status: organization.status, // "PENDING"
+      },
       branch: { id: branch._id, name: branch.name, code: branch.code },
     },
   });
@@ -139,6 +157,50 @@ export async function login(request, reply) {
     .populate("organizationId")
     .populate("roleId");
 
+  if (!memberships || memberships.length === 0) {
+    return reply.code(403).send({
+      success: false,
+      message: "No active nursery organization membership found for this account.",
+    });
+  }
+
+  // Check nursery approval status
+  const primaryWorkspace = memberships[0];
+  const org = primaryWorkspace?.organizationId;
+
+  if (org) {
+    if (org.status === "PENDING") {
+      return reply.code(403).send({
+        success: false,
+        code: "PENDING_APPROVAL",
+        message: `Your nursery "${org.name}" is pending approval. The platform Super Admin must verify and approve your registration before you can access business features.`,
+        data: {
+          organization: {
+            id: org._id,
+            name: org.name,
+            status: org.status,
+          },
+        },
+      });
+    }
+
+    if (org.status === "REJECTED") {
+      return reply.code(403).send({
+        success: false,
+        code: "REJECTED",
+        message: `Your nursery "${org.name}" registration was rejected. Please contact support.`,
+      });
+    }
+
+    if (org.status === "SUSPENDED") {
+      return reply.code(403).send({
+        success: false,
+        code: "SUSPENDED",
+        message: `Your nursery "${org.name}" account is currently suspended. Please contact platform administration.`,
+      });
+    }
+  }
+
   return reply.send({
     success: true,
     data: {
@@ -158,4 +220,3 @@ export async function login(request, reply) {
     },
   });
 }
-

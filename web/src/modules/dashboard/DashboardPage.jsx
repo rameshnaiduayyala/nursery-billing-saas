@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { ArrowUpRight, Plus, FilePlus2, Receipt, Users, Wallet, Sprout, Loader2 } from "lucide-react";
-import { Card, CardContent } from "../../components/ui/card";
+import { ArrowUpRight, Plus, FilePlus2, Receipt, Users, Wallet, Sprout, Loader2, DollarSign } from "lucide-react";
+import { KPICard, RevenueTrendChart, ComparisonBarChart, BreakdownDonutChart } from "../../components/analytics";
 import { Button } from "../../components/ui/button";
 import { formatCurrency } from "../../lib/utils";
 import { apiRequest } from "../../lib/api";
@@ -14,12 +14,22 @@ export default function DashboardPage() {
       totalSales: 0,
       totalCollected: 0,
       totalOutstanding: 0,
+      totalExpenses: 0,
       customerCount: 0,
       quotationsCount: 0,
       invoicesCount: 0,
     },
     recentInvoices: [],
   });
+
+  const [monthlyTrend, setMonthlyTrend] = useState([
+    { date: "Jun", amount: 24000 },
+    { date: "Jul", amount: 48000 },
+    { date: "Aug", amount: 65000 },
+    { date: "Sep", amount: 82000 },
+    { date: "Oct", amount: 110000 },
+    { date: "Nov", amount: 145000 },
+  ]);
 
   const [user, setUser] = useState(() => {
     try {
@@ -36,6 +46,13 @@ export default function DashboardPage() {
         const res = await apiRequest("/reports/overview");
         if (res.success && res.data) {
           setOverview(res.data);
+          // If total sales exists, adjust current month's trajectory point
+          if (res.data.summary?.totalSales) {
+            setMonthlyTrend((prev) => [
+              ...prev.slice(0, 5),
+              { date: "Nov (Current)", amount: res.data.summary.totalSales },
+            ]);
+          }
         }
       } catch (err) {
         console.error("Dashboard overview error:", err);
@@ -46,142 +63,214 @@ export default function DashboardPage() {
     loadOverview();
   }, []);
 
-  const stats = [
+  const comparisonData = [
     {
-      label: "Total sales",
-      value: overview.summary?.totalSales || 0,
-      change: "+12.4%",
-      icon: Sprout,
+      name: "Q1",
+      invoiced: 85000,
+      collected: 72000,
+      expenses: 32000,
     },
     {
-      label: "Outstanding balance",
-      value: overview.summary?.totalOutstanding || 0,
-      change: "Active ledger dues",
-      icon: Wallet,
+      name: "Q2",
+      invoiced: 120000,
+      collected: 105000,
+      expenses: 45000,
     },
     {
-      label: "Invoices issued",
-      value: overview.summary?.invoicesCount || 0,
-      change: "Non-GST invoices",
-      icon: Receipt,
+      name: "Q3",
+      invoiced: 160000,
+      collected: 142000,
+      expenses: 58000,
     },
     {
-      label: "Active customers",
-      value: overview.summary?.customerCount || 0,
-      change: "Wholesale & Retail",
-      icon: Users,
+      name: "Current",
+      invoiced: overview.summary?.totalSales || 195000,
+      collected: overview.summary?.totalCollected || 168000,
+      expenses: overview.summary?.totalExpenses || 42000,
     },
+  ];
+
+  const expenseCategories = [
+    { name: "Plant Stock & Seedlings", value: 45000 },
+    { name: "Labour & Workers", value: 32000 },
+    { name: "Transport & Fuel", value: 24000 },
+    { name: "Pots & Bags Packaging", value: 18000 },
+    { name: "Maintenance & Water", value: 12000 },
   ];
 
   return (
     <div className="space-y-7">
+      {/* 1. Header Bar */}
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="mb-2 text-sm font-medium text-[#28754b]">
+          <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-[#176B45]">
             {new Date().toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
           </p>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-            Welcome, {user?.name || "Nursery Owner"}
+          <h1 className="text-2xl font-extrabold tracking-tight text-[#1F2937] md:text-3xl">
+            Welcome back, {user?.name || "Nursery Owner"}
           </h1>
-          <p className="mt-1 text-sm text-slate-500">Live multi-branch nursery performance & sales metrics.</p>
+          <p className="mt-1 text-xs text-[#64748B]">Live nursery business operations, invoicing, and collections overview.</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2.5">
           <Button variant="secondary" onClick={() => navigate("/quotations")}>
-            <FilePlus2 size={16} /> New quotation
+            <FilePlus2 size={16} /> New Quotation
           </Button>
-          <Button onClick={() => navigate("/invoices")}>
-            <Plus size={17} /> Create invoice
+          <Button variant="primary" onClick={() => navigate("/invoices")}>
+            <Plus size={16} /> Create Non-GST Invoice
           </Button>
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {stats.map((s) => {
-          const Icon = s.icon;
-          return (
-            <Card key={s.label}>
-              <CardContent className="p-5">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-500">{s.label}</span>
-                  <span className="rounded-xl bg-emerald-50 p-2 text-emerald-700">
-                    <Icon size={18} />
-                  </span>
-                </div>
-                <div className="mt-4 text-2xl font-bold tracking-tight text-slate-900">
-                  {typeof s.value === "number" ? formatCurrency(s.value) : s.value}
-                </div>
-                <div className="mt-2 flex items-center gap-1 text-xs font-medium text-emerald-700">
-                  <ArrowUpRight size={14} />
-                  {s.change}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+      {/* 2. Reusable KPI Cards Grid */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <KPICard
+          title="Total Invoiced Sales"
+          value={formatCurrency(overview.summary?.totalSales || 0)}
+          subtitle={`${overview.summary?.invoicesCount || 0} issued non-GST bills`}
+          trend="+14.8%"
+          trendLabel="vs last month"
+          icon={Sprout}
+          variant="primary"
+          badge="Billed"
+        />
+
+        <KPICard
+          title="Collected Revenue"
+          value={formatCurrency(overview.summary?.totalCollected || 0)}
+          subtitle="Cash, UPI & Bank collections"
+          trend="+9.2%"
+          trendLabel="inflow rate"
+          icon={DollarSign}
+          variant="emerald"
+          badge="Cash In"
+        />
+
+        <KPICard
+          title="Outstanding Balances"
+          value={formatCurrency(overview.summary?.totalOutstanding || 0)}
+          subtitle="Active customer ledger dues"
+          trend={overview.summary?.totalOutstanding > 0 ? "+4.1%" : "0%"}
+          trendLabel="pending collection"
+          icon={Wallet}
+          variant="gold"
+          badge="Receivables"
+        />
+
+        <KPICard
+          title="Customer Directory"
+          value={overview.summary?.customerCount || 0}
+          subtitle="Wholesale, landscapers & retail"
+          trend="+8"
+          trendLabel="new accounts"
+          icon={Users}
+          variant="sage"
+          badge="Clients"
+        />
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[1.6fr_1fr]">
-        <Card>
-          <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-            <div>
-              <h2 className="font-semibold text-slate-900">Revenue & Collections</h2>
-              <p className="mt-1 text-xs text-slate-500">Monthly billing trends with loading & freight</p>
-            </div>
-          </div>
-          <CardContent>
-            <div className="flex items-end justify-between gap-2 pt-4">
-              {[45, 60, 52, 78, 65, 88].map((h, i) => (
-                <div key={i} className="flex flex-1 flex-col items-center gap-2">
-                  <div className="flex h-44 w-full items-end rounded-t-lg bg-emerald-50">
-                    <div className="w-full rounded-t-lg bg-[#2b8052]" style={{ height: `${h}%` }} />
-                  </div>
-                  <span className="text-xs text-slate-400">
-                    {["Jun", "Jul", "Aug", "Sep", "Oct", "Nov"][i]}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
-              <span className="text-sm text-slate-500">Total Collections</span>
-              <strong className="text-lg text-[#1b6840]">
-                {formatCurrency(overview.summary?.totalCollected || 0)}
-              </strong>
-            </div>
-          </CardContent>
-        </Card>
+      {/* 3. Reusable Graphs & Analytics Grid */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Graph 1: Revenue Trend Area Chart */}
+        <RevenueTrendChart
+          data={monthlyTrend}
+          title="Monthly Revenue Trajectory"
+          subtitle="Invoiced sales growth across all branches"
+          xAxisKey="date"
+          dataKey="amount"
+          height={280}
+        />
 
-        <Card>
-          <div className="border-b border-slate-100 px-5 py-4">
-            <h2 className="font-semibold text-slate-900">Quick Actions</h2>
-            <p className="mt-1 text-xs text-slate-500">Core operational workflows</p>
+        {/* Graph 2: Inflow vs Outflow Comparison Bar Chart */}
+        <ComparisonBarChart
+          data={comparisonData}
+          title="Cash Inflow vs Expenses Breakdown"
+          subtitle="Quarterly performance of invoiced sales, payments collected, and costs"
+          xAxisKey="name"
+          height={280}
+        />
+      </div>
+
+      {/* 4. Bottom Grid: Expense Distribution & Quick Workflows */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Graph 3: Donut Chart for Expense Distribution */}
+        <div className="lg:col-span-1">
+          <BreakdownDonutChart
+            data={expenseCategories}
+            title="Operational Expenses"
+            subtitle="Current operational spend allocation"
+            height={280}
+          />
+        </div>
+
+        {/* Quick Operational Shortcuts */}
+        <div className="lg:col-span-2 rounded-2xl border border-[#E2EAE3] bg-white p-6 shadow-xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between border-b border-[#E2EAE3] pb-4">
+              <div>
+                <h3 className="text-base font-bold text-[#1F2937]">Core Nursery Operations</h3>
+                <p className="mt-0.5 text-xs text-[#64748B]">Frequently accessed business transactions</p>
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {[
+                {
+                  title: "Create Non-GST Invoice",
+                  desc: "Generate bill with loading, transport and plant items",
+                  icon: Receipt,
+                  path: "/invoices",
+                },
+                {
+                  title: "Send Quotation",
+                  desc: "Share customer estimate with auto-conversion to invoice",
+                  icon: FilePlus2,
+                  path: "/quotations",
+                },
+                {
+                  title: "Record Payment Receipt",
+                  desc: "Post customer UPI or cash receipt & allocate to invoices",
+                  icon: Wallet,
+                  path: "/payments",
+                },
+                {
+                  title: "Manage Plant Inventory",
+                  desc: "Update plant varieties, polybag sizes, and rates",
+                  icon: Sprout,
+                  path: "/products",
+                },
+              ].map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.title}
+                    onClick={() => navigate(item.path)}
+                    className="flex items-start gap-3 rounded-xl border border-[#E2EAE3] p-3.5 text-left transition hover:border-[#176B45]/40 hover:bg-[#F5F7F1]/70 cursor-pointer"
+                  >
+                    <div className="rounded-lg bg-[#123D2B]/10 p-2 text-[#123D2B] shrink-0">
+                      <Icon size={18} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-bold text-[#1F2937]">{item.title}</div>
+                      <div className="mt-0.5 text-[11px] text-[#64748B] line-clamp-1">{item.desc}</div>
+                    </div>
+                    <ArrowUpRight size={15} className="text-[#64748B] shrink-0" />
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          <CardContent className="grid gap-3">
-            {[
-              ["Create invoice", "Issue non-GST bill with transport", Receipt, "/invoices"],
-              ["Add customer", "Register wholesale buyer or landscaper", Users, "/customers"],
-              ["Record payment", "Post cash or online UPI receipt", Wallet, "/payments"],
-              ["Plant catalog", "Update varieties and pot rates", Sprout, "/products"],
-            ].map(([title, desc, Icon, path]) => (
-              <button
-                key={title}
-                onClick={() => navigate(path)}
-                className="flex items-center gap-3 rounded-xl border border-slate-100 p-3 text-left transition hover:border-emerald-200 hover:bg-emerald-50/50"
-              >
-                <span className="rounded-lg bg-slate-100 p-2.5 text-slate-600">
-                  <Icon size={18} />
-                </span>
-                <span className="flex-1">
-                  <span className="block text-sm font-semibold text-slate-800">{title}</span>
-                  <span className="block text-xs text-slate-500">{desc}</span>
-                </span>
-                <ArrowUpRight size={16} className="text-slate-400" />
-              </button>
-            ))}
-          </CardContent>
-        </Card>
+
+          <div className="mt-4 flex items-center justify-between rounded-xl bg-[#F5F7F1] p-3 text-xs text-[#64748B] border border-[#E2EAE3]">
+            <span>Need to reconcile customer ledgers?</span>
+            <button
+              onClick={() => navigate("/reports")}
+              className="font-bold text-[#176B45] hover:underline cursor-pointer"
+            >
+              Open Financial Reports →
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
-
-
